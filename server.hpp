@@ -18,6 +18,10 @@ class Server
         ~Server();
         int createSocket();
         int getPort();
+        std::string getPassword();
+        void setPassword(std::string password);
+        void setPort(int port);
+        int getServSock();
         std::string getServerName();
 };
 

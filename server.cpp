@@ -2,6 +2,11 @@
 Server::Server(int port, std::string password) : _port(port), _password(password){}
 Server::~Server(){}
 
+void Server::setPort(int port)
+{
+    _port = port;
+}
+
 int Server::getPort()
 {
     return(_port);
@@ -10,6 +15,20 @@ int Server::getPort()
 std::string Server::getServerName()
 {
     return(_nameServer);
+}
+
+void Server::setPassword(std::string password)
+{
+    _password = password;
+}
+
+std::string Server::getPassword()
+{
+    return(_password);
+}
+int Server::getServSock()
+{
+    return(_servSock);
 }
 
 int Server::createSocket()
@@ -31,7 +50,7 @@ int Server::createSocket()
         std::cerr<<RED<<"Failed to bind socket"<<std::endl;
         return(-1);
     }
-    std::cout<<GREEN<<"Succcesfully created and boundnd the soocket"<<std::endl;
+    std::cout<<GREEN<<"Succcesfully created and boundnd the socket"<<std::endl;
     _servSock = sockfd;
     return(0);
 }
