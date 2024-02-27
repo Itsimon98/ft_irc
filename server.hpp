@@ -6,13 +6,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 class Server
 {
     private:
         std::string _password;
         int _port;
         int _servSock;
-        std::string _nameServer = "MyIRC";
+        std::string  _nameServer;
     public:
         Server(int port, std::string password);
         ~Server();
@@ -23,6 +24,7 @@ class Server
         void setPort(int port);
         int getServSock();
         std::string getServerName();
-};
 
-#endif 
+};
+int	init(int argc, char **argv, Server &myserv);
+#endif
