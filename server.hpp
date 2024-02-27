@@ -6,6 +6,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <unistd.h>
+#include <map>
+#include "user.hpp"
+
 
 class Server
 {
@@ -24,7 +30,9 @@ class Server
         void setPort(int port);
         int getServSock();
         std::string getServerName();
+		std::map<int, User>& getList();
 
 };
 int	init(int argc, char **argv, Server &myserv);
+int cycle(Server &myserv);
 #endif
