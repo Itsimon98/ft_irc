@@ -3,7 +3,8 @@
 int main(int argc, char **argv)
 {
     Server myserv(0, "");
-    init(argc, argv, myserv);
+    if(init(argc, argv, myserv) == 1)
+        return(1);
 	cycle(myserv);
 
 }

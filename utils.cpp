@@ -40,8 +40,8 @@ int	init(int argc, char **argv, Server &myserv)
 
 int cycle(Server &myserv)
 {
-	int flags = fcntl(myserv.getServSock(), F_GETFL, 0);
-	fcntl(myserv.getServSock(), F_SETFL, flags | O_NONBLOCK);
+	//int flags = fcntl(myserv.getServSock(), F_GETFL, 0);
+	fcntl(myserv.getServSock(), F_SETFL, O_NONBLOCK);
 	struct pollfd fds[500];
 	fds[0].fd = myserv.getServSock();
 	fds[0].events = POLLIN;
@@ -65,16 +65,54 @@ int cycle(Server &myserv)
 			}
 			if(errno == EAGAIN || errno == EWOULDBLOCK)
 			{
-				std::cerr<<RED<<"Would block"<<errno<<std::endl;
+				std::cerr<<RED<<"Would block, continue"<<errno<<std::endl;
 				continue;
 			}
-			// else
-			// 	{
-			// 		std::cout << "Error break." << errno << std::endl;
-			// 		exit(0);
-		//		}
+			 else
+				{
+					std::cout << "Error break." << errno << std::endl;
+					exit(0);
+				}
+		
+			std::map<int, User>::iterator it = myserv.getList().begin();
+			myserv.getList().insert(std::pair<int, User>(clientsockfd, User()));
+			std::cout << clientsockfd << errno << std::endl;
+			//poll client init
+			int n = myserv.getList().size();
+			fds[n].fd = clientsockfd;
+			fds[n].events = POLLIN;
+			fds[n].revents = 0;
+			myserv.getList()[clientsockfd].setSocket(clientsockfd);
+			myserv.getList()[clientsockfd].setMessage(0);
+			myserv.getList()[clientsockfd].setRealname("");
+			myserv.getList()[clientsockfd].setUsername("");
+			myserv.getList()[clientsockfd].setPassword("");
+			
+			std::cout << "Accept creato!" << std::endl;
 		}
-
-	}
+		for(int a; a <= myserv.getList().size(); a++)
+		{
+			if(fds[a].revents && POLLIN)
+			{
+				char buffer[1024];
+				memset(buffer, 0, sizeof(buffer));
+				ret = recv(fds[a].fd, buffer, sizeof(buffer), 0);
+				if(ret == -1)
+					std::cerr<<RED<<"Receive error"<<errno<<std::endl;
+				if(errno == EAGAIN || errno == EWOULDBLOCK)
+				{
+					std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
+					continue;
+				}
+				}
+			 	else 
+				{
+					close(fds[a].fd);
+					myserv.getList().erase(fds[a].fd);
+					std::cout << errno << std::endl;
+					return (0);
+				}
+			}
+		}
 	return(0);
 }
