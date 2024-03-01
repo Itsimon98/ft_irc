@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <map>
 #include "user.hpp"
-
+class User;
 
 class Server
 {
@@ -20,6 +20,7 @@ class Server
         int _port;
         int _servSock;
         std::string  _nameServer;
+        std::map<int, User>	_clientSock;
     public:
         Server(int port, std::string password);
         ~Server();

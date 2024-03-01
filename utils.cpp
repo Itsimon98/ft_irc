@@ -4,7 +4,7 @@ int	init(int argc, char **argv, Server &myserv)
 {
 	 if(argc != 3)
     {
-        std::cerr<<RED<<"TO RUN : ./ircserv <port> <password>"<<std::endl;
+        std::cerr<<RED<<"To RUN : ./ircserv <port> <password>"<<std::endl;
 		return (1);
     }
 	try
@@ -68,12 +68,13 @@ int cycle(Server &myserv)
 				std::cerr<<RED<<"Would block"<<errno<<std::endl;
 				continue;
 			}
-			else
-				{
-					std::cout << "Error break." << errno << std::endl;
-					exit(0);
-				}
+			// else
+			// 	{
+			// 		std::cout << "Error break." << errno << std::endl;
+			// 		exit(0);
+		//		}
 		}
-		
+
 	}
+	return(0);
 }

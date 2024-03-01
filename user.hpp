@@ -10,7 +10,7 @@ class User
 	std::string _password;
 	public:
 	User();
-	~User();
+	//~User();
 	std::string getUsername();
 	std::string getPassword();
 	std::string getRealname();

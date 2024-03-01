@@ -31,6 +31,10 @@ int Server::getServSock()
 {
     return(_servSock);
 }
+std::map<int, User>	&Server::getList()
+{
+	return (_clientSock);
+}
 
 int Server::createSocket()
 {
