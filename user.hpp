@@ -12,7 +12,7 @@ class User
 	int clientsock;
 	public:
 	User();
-	//~User();
+	~User();
 	std::string getUsername();
 	std::string getPassword();
 	std::string getRealname();

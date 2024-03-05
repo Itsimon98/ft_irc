@@ -1,5 +1,6 @@
 #include "server.hpp"
 
+
 int	init(int argc, char **argv, Server &myserv)
 {
 	 if(argc != 3)
@@ -61,28 +62,28 @@ int cycle(Server &myserv)
 			int clientsockfd = accept(myserv.getServSock(), NULL, NULL);
 			if (clientsockfd < 0)
 			{
-				std::cerr<<RED<<"Accept failed"<<std::endl;
-			}
-			if(errno == EAGAIN || errno == EWOULDBLOCK)
-			{
-				std::cerr<<RED<<"Would block, continue"<<errno<<std::endl;
-				continue;
-			}
-			 else
+			std::cerr<<RED<<"Accept failed"<<std::endl;
+
+				if(errno == EAGAIN || errno == EWOULDBLOCK)
+				{
+					std::cerr<<RED<<"Would block, continue"<<errno<<std::endl;
+					continue;
+				}
+				else
 				{
 					std::cout << "Error break." << errno << std::endl;
 					exit(0);
 				}
-		
+			}
 			std::map<int, User>::iterator it = myserv.getList().begin();
 			myserv.getList().insert(std::pair<int, User>(clientsockfd, User()));
-			std::cout << clientsockfd << errno << std::endl;
-			//poll client init
+			std::cout<< "Client sock: " << clientsockfd << std::endl;
+
 			int n = myserv.getList().size();
 			fds[n].fd = clientsockfd;
 			fds[n].events = POLLIN;
 			fds[n].revents = 0;
-			myserv.getList()[clientsockfd].setSocket(clientsockfd);
+			myserv.getList()[clientsockfd].setSocket(clientsockfd);	
 			myserv.getList()[clientsockfd].setMessage(0);
 			myserv.getList()[clientsockfd].setRealname("");
 			myserv.getList()[clientsockfd].setUsername("");
@@ -90,29 +91,37 @@ int cycle(Server &myserv)
 			
 			std::cout << "Accept creato!" << std::endl;
 		}
-		for(int a; a <= myserv.getList().size(); a++)
+		for(int a = 1; a <= myserv.getList().size(); a++)
 		{
+			
 			if(fds[a].revents && POLLIN)
 			{
+				
 				char buffer[1024];
 				memset(buffer, 0, sizeof(buffer));
 				ret = recv(fds[a].fd, buffer, sizeof(buffer), 0);
 				if(ret == -1)
-					std::cerr<<RED<<"Receive error"<<errno<<std::endl;
-				if(errno == EAGAIN || errno == EWOULDBLOCK)
 				{
-					std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
-					continue;
+				std::cerr<<RED<<"Receive error :"<<errno<<std::endl;
+					if(errno == EAGAIN || errno == EWOULDBLOCK)
+					{
+						std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
+						continue;
+					}
+					
+			 		else 
+					{
+						close(fds[a].fd);
+						myserv.getList().erase(fds[a].fd);
+						std::cout << errno << std::endl;
+						return (0);
+					}
 				}
-				}
-			 	else 
-				{
-					close(fds[a].fd);
-					myserv.getList().erase(fds[a].fd);
-					std::cout << errno << std::endl;
-					return (0);
-				}
+			std::cout<<GREEN<< buffer<< std::endl;
 			}
+		}	
+		
+			
 		}
 	return(0);
 }

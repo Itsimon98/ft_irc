@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <map>
 #include "user.hpp"
+#include <cstring>
 class User;
 
 class Server
