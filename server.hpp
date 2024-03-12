@@ -14,8 +14,10 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include "channel.hpp"
+#include <list>
 class User;
-
+class Channel;
 class Server
 {
     private:
@@ -24,6 +26,7 @@ class Server
         int _servSock;
         std::string  _nameServer;
         std::map<int, User>	_clientSock;
+		std::list<Channel> _channels;
     public:
         Server(int port, std::string password);
         ~Server();
@@ -36,6 +39,7 @@ class Server
         std::string getServerName();
 		std::map<int, User>& getList();
 		int getSocketUser(std::string username);
+		std::list<Channel> getChannel();
 
 };
 int	init(int argc, char **argv, Server &myserv);

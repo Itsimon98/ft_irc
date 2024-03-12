@@ -69,3 +69,7 @@ int Server::getSocketUser(std::string username)
 	}
 	return(0);
 }
+std::list<Channel> Server::getChannel()
+{
+	return(_channels);
+}

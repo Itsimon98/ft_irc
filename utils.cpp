@@ -182,9 +182,17 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 				fmessage += message + " ";
 			}
 			fmessage += '\n';
-			std::cout<<fmessage<<std::endl;
 			strsize = fmessage.size();
 			send(tsock, fmessage.c_str() , strsize, 0);
+		}
+		else if (tmp == "JOIN")
+		{
+			std::string chname;
+			ss>>chname;
+			Channel newchannel(chname);
+			//newchannel.setClient(getList()[fd]);
+			myserv.getChannel().push_back(newchannel);
+
 			
 		}
 
