@@ -169,25 +169,23 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 			int strsize;
 			ss>>username;
 			int tsock = myserv.getSocketUser(username);
+			if(tsock == 0)
+			{
+				send(fd, "No such user found\n", 20, 0);
+				return;
+			}
 			std::string message;
-			ss >>  message;
-			strsize = message.size();
-			std::cout<< message << " : "<< tsock << std::endl;
-			send(tsock, message.c_str() , strsize, 0);
+			std::string fmessage = "!PRVMSG by " + sendernick + " ";
+			while(ss)
+			{
+				ss >>  message;
+				fmessage += message + " ";
+			}
+			fmessage += '\n';
+			std::cout<<fmessage<<std::endl;
+			strsize = fmessage.size();
+			send(tsock, fmessage.c_str() , strsize, 0);
 			
 		}
 
 }
-
-
-// void	prvmsg(Server myserv, std::string)
-// {
-// 	std::string command;
-// 		ss >>  command;
-// 		if(command == "PRVMSG")
-// 		{
-// 			std::string message;
-// 			ss>>message;
-
-// 		}
-// }
