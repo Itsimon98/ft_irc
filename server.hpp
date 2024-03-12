@@ -12,6 +12,7 @@
 #include <map>
 #include "user.hpp"
 #include <cstring>
+#include <sstream>
 class User;
 
 class Server
@@ -37,4 +38,5 @@ class Server
 };
 int	init(int argc, char **argv, Server &myserv);
 int cycle(Server &myserv);
+void parser(std::string, User *user, Server myserv, int fd);
 #endif

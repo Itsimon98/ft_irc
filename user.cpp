@@ -16,10 +16,18 @@ void    User::setUsername(std::string username)
 {
     _username = username;
 }
-
-void    User::setMessage(int message)
+void	User::setNickname(std::string nickname)
 {
-    _message = message;
+    _nickname = nickname;
+}
+std::string	User::getStatus()
+{
+    return (_status);
+}
+
+void    User::setStatus(std::string status)
+{
+    _status = status;
 }
 
 

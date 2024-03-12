@@ -8,17 +8,22 @@ class User
 	std::string _username;
 	std::string _realname;
 	std::string _password;
-	int _message;
+	std::string _status;
+	std::string _nickname;
 	int clientsock;
+	std::string status;
+
 	public:
 	User();
 	~User();
 	std::string getUsername();
 	std::string getPassword();
 	std::string getRealname();
+	std::string	getStatus();
 	void	setSocket(int sockfd);
+	void	setNickname(std::string nickname);
 	void	setUsername(std::string username);
-	void	setMessage(int message);
+	void	setStatus(std::string status);
 	void	setRealname(std::string realname);
 	void	setPassword(std::string password);
 };

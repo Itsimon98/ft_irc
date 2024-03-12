@@ -83,33 +83,36 @@ int cycle(Server &myserv)
 			fds[n].fd = clientsockfd;
 			fds[n].events = POLLIN;
 			fds[n].revents = 0;
-			myserv.getList()[clientsockfd].setSocket(clientsockfd);	
-			myserv.getList()[clientsockfd].setMessage(0);
+			myserv.getList()[clientsockfd].setSocket(clientsockfd);
+			myserv.getList()[clientsockfd].setStatus("");
 			myserv.getList()[clientsockfd].setRealname("");
 			myserv.getList()[clientsockfd].setUsername("");
 			myserv.getList()[clientsockfd].setPassword("");
-			
+			//myserv.getList()[clientsockfd].setHostname("");
+			myserv.getList()[clientsockfd].setStatus("UNLOGGED");
+
 			std::cout << "Accept creato!" << std::endl;
+			send(fds[n].fd,  "Type the server password : \n",  29, 0);
 		}
 		for(int a = 1; a <= myserv.getList().size(); a++)
 		{
-			
+
 			if(fds[a].revents && POLLIN)
 			{
-				
+
 				char buffer[1024];
 				memset(buffer, 0, sizeof(buffer));
 				ret = recv(fds[a].fd, buffer, sizeof(buffer), 0);
 				if(ret == -1)
 				{
-				std::cerr<<RED<<"Receive error :"<<errno<<std::endl;
+				std::cerr<<RED<<" error :"<<errno<<std::endl;
 					if(errno == EAGAIN || errno == EWOULDBLOCK)
 					{
 						std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
 						continue;
 					}
-					
-			 		else 
+
+			 		else
 					{
 						close(fds[a].fd);
 						myserv.getList().erase(fds[a].fd);
@@ -117,11 +120,44 @@ int cycle(Server &myserv)
 						return (0);
 					}
 				}
-			std::cout<<GREEN<< buffer<< std::endl;
+			//std::cout<<GREEN<< buffer<<a<<std::endl;
+			parser(buffer, &myserv.getList()[fds[a].fd], myserv, fds[a].fd);
+
 			}
-		}	
-		
-			
+		}
+
+
 		}
 	return(0);
+}
+
+void parser(std::string buffer, User *user, Server myserv, int fd)
+{
+	std::string tmp;
+	std::vector<std::string> args;
+	std::stringstream ss(buffer);
+	std::getline(ss, tmp, ' ');
+	if(tmp == "NICKNAME")
+	{
+			if(user->getStatus() != "LOGGED")
+				send(fd, "Use the command PASSWORD before setting your nickname\n",  56, 0);
+			std::string nickname;
+			ss>>nickname;
+			user->setNickname(nickname);
+	}
+	else if(tmp == "PASSWORD")
+	{
+		std::string password;
+		ss >>  password;
+		user->setPassword(password);
+		if(password == myserv.getPassword())
+		{
+			user->setStatus("LOGGED");
+			send(fd, "Succesfully logged\n",  20, 0);
+		}
+		else
+			send(fd, "WRONG PASSWORD\n", 16 ,  0 );
+
+	}
+
 }
