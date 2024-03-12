@@ -59,3 +59,13 @@ int Server::createSocket()
     _servSock = sockfd;
     return(0);
 }
+
+int Server::getSocketUser(std::string username)
+{
+	for (std::map <int, User>::iterator it =_clientSock.begin(); it != _clientSock.end(); it++)
+	{
+		if(it->second.getNickname() == username)
+			 return(it->first);
+	}
+	return(0);
+}

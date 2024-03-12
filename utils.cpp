@@ -140,7 +140,10 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 	if(tmp == "NICKNAME")
 	{
 			if(user->getStatus() != "LOGGED")
+			{
 				send(fd, "Use the command PASSWORD before setting your nickname\n",  56, 0);
+				return;
+			}
 			std::string nickname;
 			ss>>nickname;
 			user->setNickname(nickname);
@@ -157,7 +160,34 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 		}
 		else
 			send(fd, "WRONG PASSWORD\n", 16 ,  0 );
-
 	}
+	else if (tmp == "PRVMSG")
+		{
+			std::string command;
+			std::string username;
+			std::string sendernick = user->getNickname();
+			int strsize;
+			ss>>username;
+			int tsock = myserv.getSocketUser(username);
+			std::string message;
+			ss >>  message;
+			strsize = message.size();
+			std::cout<< message << " : "<< tsock << std::endl;
+			send(tsock, message.c_str() , strsize, 0);
+			
+		}
 
 }
+
+
+// void	prvmsg(Server myserv, std::string)
+// {
+// 	std::string command;
+// 		ss >>  command;
+// 		if(command == "PRVMSG")
+// 		{
+// 			std::string message;
+// 			ss>>message;
+
+// 		}
+// }

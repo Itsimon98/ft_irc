@@ -24,6 +24,10 @@ std::string	User::getStatus()
 {
     return (_status);
 }
+std::string	User::getNickname()
+{
+    return (_nickname);
+}
 
 void    User::setStatus(std::string status)
 {

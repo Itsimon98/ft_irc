@@ -13,6 +13,7 @@
 #include "user.hpp"
 #include <cstring>
 #include <sstream>
+#include <vector>
 class User;
 
 class Server
@@ -34,6 +35,7 @@ class Server
         int getServSock();
         std::string getServerName();
 		std::map<int, User>& getList();
+		int getSocketUser(std::string username);
 
 };
 int	init(int argc, char **argv, Server &myserv);
