@@ -1,2 +1,4 @@
 /.vscode
 .nfs0000000000ec0d5400000076
+*.o
+ircserv
