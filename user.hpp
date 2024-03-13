@@ -22,7 +22,7 @@ class User
 	std::string	getStatus();
 	std::string getNickname();
 	int getSocket();
-	void	setSocket(int sockfd);
+	void	setSocket(int clientsockfd);
 	void	setNickname(std::string nickname);
 	void	setUsername(std::string username);
 	void	setStatus(std::string status);

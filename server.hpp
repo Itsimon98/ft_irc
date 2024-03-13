@@ -1,7 +1,9 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
+
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
+
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -16,8 +18,10 @@
 #include <vector>
 #include "channel.hpp"
 #include <list>
+
 class User;
 class Channel;
+
 class Server
 {
     private:
@@ -27,6 +31,7 @@ class Server
         std::string  _nameServer;
         std::map<int, User>	_clientSock;
 		std::list<Channel> _channels;
+
     public:
         Server(int port, std::string password);
         ~Server();
@@ -46,8 +51,10 @@ class Server
 
 
 };
-int	init(int argc, char **argv, Server &myserv);
-int cycle(Server &myserv);
-void parser(std::string, User *user, Server myserv, int fd);
+
+int		init(int argc, char **argv, Server &myserv);
+int 	cycle(Server &myserv);
+void 	parser(std::string, User *user, Server myserv, int fd);
 void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist);
+
 #endif

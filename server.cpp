@@ -31,6 +31,7 @@ int Server::getServSock()
 {
     return(_servSock);
 }
+
 std::map<int, User>	&Server::getList()
 {
 	return (_clientSock);
@@ -69,6 +70,7 @@ int Server::getSocketUser(std::string username)
 	}
 	return(0);
 }
+
 std::list<Channel> &Server::getChannel()
 {
 	return(_channels);
@@ -86,11 +88,13 @@ Channel& Server::getChanFromName(std::string channel)
     return(empty);
 
 }
+
 void Server::sendData(int sockfd, const std::string& data)
 {
     send(sockfd, data.c_str(), data.length(), 0);
     //std::cout << "Sent: " << data << std::endl;
 }
+
 void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
 {
     std::list<User>::iterator it = ch.getListUsers().begin();
