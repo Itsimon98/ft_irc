@@ -86,7 +86,6 @@ int cycle(Server &myserv)
 
 			std::cout << "New Client sock: " << clientsockfd << ", at n = " << n << std::endl;
 
-
 			fds[n].fd = clientsockfd;
 			fds[n].events = POLLIN;
 			fds[n].revents = 0;
@@ -100,25 +99,28 @@ int cycle(Server &myserv)
 			send(fds[n].fd,  "Welcome! Type the server password : \n",  37, 0);
 
 		}
+
 		for(int a = 1; a <= myserv.getList().size(); a++)
 		{
-
-			if(fds[a].revents && POLLIN)
+			if (fds[a].revents && POLLIN)
 			{
+				// continue;
+		
 				char buffer[1024];
 
 				memset(buffer, 0, sizeof(buffer));
 
 				ret = recv(fds[a].fd, buffer, sizeof(buffer), 0);
 
-				if(ret == -1) {
+				if(ret == -1)
+				{
 					std::cerr<<RED<<" error :"<<errno<<std::endl;
 					
 					if(errno == EAGAIN || errno == EWOULDBLOCK) {
 						std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
 						continue;
 					}
-			 		else {
+					else {
 						close(fds[a].fd);
 						myserv.getList().erase(fds[a].fd);
 						std::cout << errno << std::endl;
@@ -126,11 +128,11 @@ int cycle(Server &myserv)
 					}
 				}
 
-			std::cout<<GREEN<< "Received Buffer: '" << buffer << "'  from a=" << a << std::endl;
-			User usr = myserv.getList()[fds[a].fd];
+				std::cout<<GREEN<< "Received Buffer: '" << buffer << "'  from a=" << a << std::endl;
 
-			parser(buffer, &usr, myserv);
+				User usr = myserv.getList()[fds[a].fd];
 
+				parser(buffer, &usr, myserv);
 			}
 		}
 	}
