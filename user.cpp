@@ -40,3 +40,7 @@ void    User::setPassword(std::string password)
     _password = password;
 }
 
+int User::getSocket()
+{
+	return(clientsock);
+}

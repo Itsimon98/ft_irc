@@ -69,7 +69,35 @@ int Server::getSocketUser(std::string username)
 	}
 	return(0);
 }
-std::list<Channel> Server::getChannel()
+std::list<Channel> &Server::getChannel()
 {
 	return(_channels);
+}
+
+Channel& Server::getChanFromName(std::string channel)
+{
+    static Channel empty(empty);
+    for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    {
+        if (it->getName() == channel)
+            return (*it);
+    }
+    empty.setEmpty(1);
+    return(empty);
+
+}
+void Server::sendData(int sockfd, const std::string& data)
+{
+    send(sockfd, data.c_str(), data.length(), 0);
+    //std::cout << "Sent: " << data << std::endl;
+}
+void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
+{
+    std::list<User>::iterator it = ch.getListUsers().begin();
+	
+    for (; it != ch.getListUsers().end() ; it++)
+    {
+        myserv.sendData(it->getSocket(), msg);
+		std::cout<<" sock : "<< it->getSocket()<<std::endl;
+    }
 }

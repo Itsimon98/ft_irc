@@ -39,10 +39,15 @@ class Server
         std::string getServerName();
 		std::map<int, User>& getList();
 		int getSocketUser(std::string username);
-		std::list<Channel> getChannel();
+		std::list<Channel> &getChannel();
+		void ft_send_all_chan(Server myserv, Channel ch, std::string msg);
+		void sendData(int sockfd, const std::string& data);
+		Channel& getChanFromName(std::string name);
+
 
 };
 int	init(int argc, char **argv, Server &myserv);
 int cycle(Server &myserv);
 void parser(std::string, User *user, Server myserv, int fd);
+void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist);
 #endif
