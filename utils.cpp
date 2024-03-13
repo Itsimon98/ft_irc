@@ -82,9 +82,10 @@ int cycle(Server &myserv)
 				}
 			}
 
+			int n = myserv.getList().size() + 1;
+
 			std::cout << "New Client sock: " << clientsockfd << ", at n = " << n << std::endl;
 
-			int n = myserv.getList().size() + 1;
 
 			fds[n].fd = clientsockfd;
 			fds[n].events = POLLIN;
