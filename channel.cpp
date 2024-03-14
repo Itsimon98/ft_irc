@@ -2,6 +2,7 @@
 Channel::Channel(std::string name)
 {
 	_name = name;
+	_empty = 0;
 }
 Channel::~Channel(){}
 

@@ -89,7 +89,8 @@ int cycle(Server &myserv)
 			myserv.getList()[clientsockfd].setPassword("");
 			//myserv.getList()[clientsockfd].setHostname("");
 			myserv.getList()[clientsockfd].setStatus("UNLOGGED");
-
+			Channel global("glob");
+			myserv.getChannel().push_back(global);
 			std::cout << "Accept creato!" << std::endl;
 			send(fds[n].fd,  "Type the server password : \n",  29, 0);
 		}
@@ -119,14 +120,19 @@ int cycle(Server &myserv)
 						return (0);
 					}
 				}
+				else if(ret == 0)
+				{
+					close(fds[a].fd);
+					myserv.getList().erase(fds[a].fd);
+					continue;
+				}
 			//std::cout<<GREEN<< buffer<<a<<std::endl;
-			parser(buffer, &myserv.getList()[fds[a].fd], myserv, fds[a].fd);
+			parser(buffer, myserv.getList()[fds[a].fd], myserv, fds[a].fd);
 
 			}
 		}
 
-
-		}
+	}
 	return(0);
 }
 void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist)
@@ -151,7 +157,7 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 	}
 }
 
-void parser(std::string buffer, User *user, Server myserv, int fd)
+void parser(std::string buffer, User user, Server &myserv, int fd)
 {
 	std::string tmp;
 	std::vector<std::string> args;
@@ -159,23 +165,24 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 	std::getline(ss, tmp, ' ');
 	if(tmp == "NICKNAME")
 	{
-			if(user->getStatus() != "LOGGED")
+			if(myserv.getList()[fd].getStatus() != "LOGGED")
 			{
 				send(fd, "Use the command PASSWORD before setting your nickname\n",  56, 0);
 				return;
 			}
 			std::string nickname;
 			ss>>nickname;
-			user->setNickname(nickname);
+			myserv.getList()[fd].setNickname(nickname);
+			std::cout<< " size users :" <<myserv.getList().size()<<std::endl;
 	}
 	else if(tmp == "PASSWORD")
 	{
 		std::string password;
 		ss >>  password;
-		user->setPassword(password);
+		myserv.getList()[fd].setPassword(password);
 		if(password == myserv.getPassword())
 		{
-			user->setStatus("LOGGED");
+			myserv.getList()[fd].setStatus("LOGGED");
 			send(fd, "Succesfully logged\n",  20, 0);
 		}
 		else
@@ -185,7 +192,7 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 		{
 			std::string command;
 			std::string username;
-			std::string sendernick = user->getNickname();
+			std::string sendernick = myserv.getList()[fd].getNickname();
 			int strsize;
 			ss>>username;
 			int tsock = myserv.getSocketUser(username);
@@ -209,20 +216,30 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 		{
 			std::string chname;
 			ss>>chname;
-			
+			std::cout<<"size bef : "<<myserv.getChannel().size()<<std::endl;
+			//std::cout<<"address : "<<&myserv.getChannel()<<std::endl;
 			std::list<Channel>::iterator it = myserv.getChannel().begin();
-			for(; it != myserv.getChannel().end(); it++)
+							std::cout<< "diop"<<myserv.getList()[fd].getNickname()<<std::endl;
+
+			for(it; it != myserv.getChannel().end(); it++)
 			{
 				 if(chname == (*it).getName())
 					 break;
-					std::cout<< (*it).getName()<< std::endl; 
+					std::cout<< (*it).getName()<< std::endl;
 			}
+			std::cout<<"name 1111 : "<< (*it).getName()<<std::endl;
 			if(it == myserv.getChannel().end())
-			{	
+			{
 				Channel newchannel(chname);
+				//std::cout<<"address : "<<&myserv.getChannel()<<std::endl;
 				newchannel.setClient(myserv.getList()[fd]);
-				//std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
+
+
 				myserv.getChannel().push_back(newchannel);
+				std::list<Channel>::iterator it2 = myserv.getChannel().begin();
+				std::cout<<"name : "<< (*it2).getName()<<std::endl;
+				std::cout<<"size aft: "<<myserv.getChannel().size()<<std::endl;
+				std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
 				//std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
@@ -234,9 +251,13 @@ void parser(std::string buffer, User *user, Server myserv, int fd)
 				(*it).setClient(myserv.getList()[fd]);
 				ft_update_list(myserv, chname, fd, (*it).getListUsers());
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
-				
+				std::cout<< "dioca1"<< std::endl;
 				myserv.ft_send_all_chan(myserv, ch, msg);
 			}
+			std::list<Channel>::iterator it3 = myserv.getChannel().begin();
+			std::cout<<"name : "<< (*it3).getName()<<std::endl;
+							std::cout<<"size aft: "<<myserv.getChannel().size()<<std::endl;
+
 		}
 
 }

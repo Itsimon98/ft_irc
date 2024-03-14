@@ -13,7 +13,7 @@ class Channel
 		std::list<User> _clients;
 		std::list<User> _operator;
 		std::list<User> _invited;
-		int _empty = 0;
+		int _empty;
 	public:
 		Channel();
 		Channel(std::string);
@@ -25,7 +25,7 @@ class Channel
 		std::string getPassword();
 		std::list<User> &getListUsers();
 		void setEmpty(int empty);
-		
+
 
 };
 

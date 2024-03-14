@@ -69,7 +69,7 @@ int Server::getSocketUser(std::string username)
 	}
 	return(0);
 }
-std::list<Channel> &Server::getChannel()
+std::list<Channel>& Server::getChannel()
 {
 	return(_channels);
 }
@@ -94,7 +94,7 @@ void Server::sendData(int sockfd, const std::string& data)
 void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
 {
     std::list<User>::iterator it = ch.getListUsers().begin();
-	
+
     for (; it != ch.getListUsers().end() ; it++)
     {
         myserv.sendData(it->getSocket(), msg);
