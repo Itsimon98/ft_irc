@@ -89,8 +89,6 @@ int cycle(Server &myserv)
 			myserv.getList()[clientsockfd].setPassword("");
 			//myserv.getList()[clientsockfd].setHostname("");
 			myserv.getList()[clientsockfd].setStatus("UNLOGGED");
-			Channel global("glob");
-			myserv.getChannel().push_back(global);
 			std::cout << "Accept creato!" << std::endl;
 			send(fds[n].fd,  "Type the server password : \n",  29, 0);
 		}
@@ -216,32 +214,24 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 		{
 			std::string chname;
 			ss>>chname;
-			std::cout<<"size bef : "<<myserv.getChannel().size()<<std::endl;
-			//std::cout<<"address : "<<&myserv.getChannel()<<std::endl;
 			std::list<Channel>::iterator it = myserv.getChannel().begin();
-							std::cout<< "diop"<<myserv.getList()[fd].getNickname()<<std::endl;
 
-			for(it; it != myserv.getChannel().end(); it++)
+			for(; it != myserv.getChannel().end(); it++)
 			{
 				 if(chname == (*it).getName())
 					 break;
 					std::cout<< (*it).getName()<< std::endl;
 			}
-			std::cout<<"name 1111 : "<< (*it).getName()<<std::endl;
 			if(it == myserv.getChannel().end())
 			{
 				Channel newchannel(chname);
-				//std::cout<<"address : "<<&myserv.getChannel()<<std::endl;
 				newchannel.setClient(myserv.getList()[fd]);
 
 
 				myserv.getChannel().push_back(newchannel);
 				std::list<Channel>::iterator it2 = myserv.getChannel().begin();
-				std::cout<<"name : "<< (*it2).getName()<<std::endl;
-				std::cout<<"size aft: "<<myserv.getChannel().size()<<std::endl;
 				std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
-				//std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
 				std::cout<< "dioca"<< std::endl;
 			}
@@ -251,13 +241,8 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 				(*it).setClient(myserv.getList()[fd]);
 				ft_update_list(myserv, chname, fd, (*it).getListUsers());
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
-				std::cout<< "dioca1"<< std::endl;
 				myserv.ft_send_all_chan(myserv, ch, msg);
 			}
-			std::list<Channel>::iterator it3 = myserv.getChannel().begin();
-			std::cout<<"name : "<< (*it3).getName()<<std::endl;
-							std::cout<<"size aft: "<<myserv.getChannel().size()<<std::endl;
-
 		}
 
 }

@@ -98,6 +98,5 @@ void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
     for (; it != ch.getListUsers().end() ; it++)
     {
         myserv.sendData(it->getSocket(), msg);
-		std::cout<<" sock : "<< it->getSocket()<<std::endl;
     }
 }

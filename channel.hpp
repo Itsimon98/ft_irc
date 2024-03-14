@@ -14,6 +14,12 @@ class Channel
 		std::list<User> _operator;
 		std::list<User> _invited;
 		int _empty;
+		int _pwOn;
+		int _invOn;
+		int _topicOn;
+		int _limitOn;
+		int _limit;
+		int _stop;
 	public:
 		Channel();
 		Channel(std::string);
