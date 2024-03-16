@@ -33,6 +33,9 @@ class Channel
 		void setEmpty(int empty);
 		int	isUserIn(std::string user);
 		void setInvited(User &invited);
+		int isUserOper(std::string user);
+		void removeOper(std::string user);
+		void setOper(User &suser);
 
 
 };

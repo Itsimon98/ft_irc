@@ -44,3 +44,33 @@ void Channel::setInvited(User &invited)
 {
 	_invited.push_back(invited);
 }
+
+int	Channel::isUserOper(std::string user)
+{
+    for (std::list<User>::iterator it = _operator.begin(); it != _operator.end(); it++)
+    {
+                if (it->getNickname() == user)
+                    return (1);
+    }
+    return (0);
+}
+
+void Channel::removeOper(std::string sbirro)
+{
+	std::list<User>::iterator finder = _operator.begin();
+	for(; finder != _operator.end(); finder++)
+	{
+		if (finder->getNickname() == sbirro)
+		{
+			_operator.erase(finder);
+			std::cout << "User removed from operators" << std::endl;
+			break ;
+		}
+	}
+	if (finder == _operator.end())
+	 	std::cout << "The user in not an operator" << std::endl;
+}
+void Channel::setOper(User &user)
+{
+	_operator.push_back(user);
+}

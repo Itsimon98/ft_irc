@@ -156,13 +156,14 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 		ite++;
 	}
 }
-
 void parser(std::string buffer, User user, Server &myserv, int fd)
 {
 	std::string tmp;
+	std::string tmp1;
 	std::vector<std::string> args;
 	std::stringstream ss(buffer);
 	std::getline(ss, tmp, ' ');
+	
 	if(tmp == "NICKNAME")
 	{
 			if(myserv.getList()[fd].getStatus() != "LOGGED")
@@ -232,10 +233,11 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 			{
 				Channel newchannel(chname);
 				newchannel.setClient(myserv.getList()[fd]);
-
+				newchannel.setOper(myserv.getList()[fd]);
 
 				myserv.getChannel().push_back(newchannel);
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
+				
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
 			}
 			else
@@ -281,7 +283,50 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 			std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
 			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
 		}
-
+		else if(tmp == "KICK")
+		{
+		std::string channel;
+		ss >> channel;		
+		User sender_user = myserv.getList().find(fd)->second; 
+			if(!myserv.isChanReal(channel))
+			{
+				std::cout << "Channel not found" << std::endl;
+				myserv.sendData(fd, "MyIRC Channel not found!\r\n");
+				return ;
+			}
+		Channel& ch = myserv.getChanFromName(channel);
+		std::list<User>::iterator it = ch.getListUsers().begin(); 
+		std::string nick;
+		ss >> nick;				
+		if(!ch.isUserOper(myserv.getUsernameFromSock(fd)))
+		{
+			myserv.sendData(fd, "You are not an operator\r\n");
+			return;
 		}
+		else if (!ch.isUserIn(nick))
+		{
+			myserv.sendData(fd, "The user you want to kick is not in the channel\r\n");
+			return;
+		}
+		else
+		{
+			for(; it != ch.getListUsers().end(); it++)
+			{
+				if (it->getNickname() == nick)
+					break ;								
+			}
+		}
+	
+		if (it != ch.getListUsers().end())
+		{
+		if(ch.isUserOper(nick))
+			ch.removeOper(nick);
+		ch.getListUsers().erase(it);
+		myserv.sendData(myserv.getUserSockFromNick(nick), "You have been kicked\r\n");
+		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
+		}	
+		}
+
+}
 
 
