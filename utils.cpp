@@ -1,5 +1,7 @@
 #include "server.hpp"
 
+
+
 int	init(int argc, char **argv, Server &myserv)
 {
 	 if(argc != 3)
@@ -184,7 +186,11 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 			send(fd, "Succesfully logged\n",  20, 0);
 		}
 		else
-			send(fd, "WRONG PASSWORD\n", 16 ,  0 );
+		{
+			send(fd, "WRONG PASSWORD\n", 15 ,  0 );
+			close(fd);
+			myserv.getList().erase(fd);
+		}
 	}
 	else if (tmp == "PRVMSG")
 		{
@@ -233,7 +239,6 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 				std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
-				std::cout<< "dioca"<< std::endl;
 			}
 			else
 			{
@@ -242,6 +247,8 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 				ft_update_list(myserv, chname, fd, (*it).getListUsers());
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
 				myserv.ft_send_all_chan(myserv, ch, msg);
+				std::string chmessage;
+				
 			}
 		}
 

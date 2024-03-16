@@ -16,6 +16,7 @@
 #include <vector>
 #include "channel.hpp"
 #include <list>
+#include <signal.h>
 class User;
 class Channel;
 class Server
