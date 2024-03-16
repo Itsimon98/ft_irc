@@ -201,6 +201,20 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 			int strsize;
 			ss>>username;
 			int tsock = myserv.getSocketUser(username);
+			if(username[0] == '#')
+			{
+				std::string message;
+				std::string fmessage = "!CHANNMSG " + username + " ";
+				while(ss)
+				{
+					ss >>  message;
+					fmessage += message + " ";
+				}
+				fmessage += '\n';
+				myserv.sendChanMsg(username, fmessage, myserv, fd);
+				return;
+
+			}
 			if(tsock == 0)
 			{
 				send(fd, "No such user found\n", 20, 0);

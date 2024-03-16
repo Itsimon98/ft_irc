@@ -141,5 +141,19 @@ int Server::getUserSockFromNick(std::string name)
     return (0);
 }
 
+void Server::sendChanMsg(std::string username, std::string message, Server myserv, int fd)
+{
 
+	username.erase(0,1);
+	if(myserv.isChanReal(username))
+	{
+		Channel &ch = myserv.getChanFromName(username);
+		myserv.ft_send_all_chan(myserv, ch, message);
+	}
+	else
+	{
+		myserv.sendData(fd, "Channel does not exists\n");
+	}
+
+}
 
