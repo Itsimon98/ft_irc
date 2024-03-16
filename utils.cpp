@@ -139,8 +139,8 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 {
 	std::cout << "Channel found	!" << std::endl;
 	std::string msg = ":" + myserv.getList()[j].getNickname() + "! JOIN " + channel + "\r\n";
-	std::list<User>::iterator ite = userlist.begin();
 	std::string users;
+	std::list<User>::iterator ite = userlist.begin();
 	while (ite != userlist.end())
 	{
 		users += (*ite).getNickname();
@@ -235,8 +235,6 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 
 
 				myserv.getChannel().push_back(newchannel);
-				std::list<Channel>::iterator it2 = myserv.getChannel().begin();
-				std::cout<<myserv.getList()[fd].getNickname()<<std::endl;
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
 			}
@@ -251,5 +249,39 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 				
 			}
 		}
+		else if(tmp == "INVITE")
+		{
+			std::string chname;
+			std::string invnick;
+			ss>>chname;
+			ss>>invnick;
+			
+			if(!myserv.isChanReal(chname))
+			{
+				std::string msg;
+				msg += "Channel not found!\n";
+				send(fd, msg.c_str(), msg.size(), 0);
+			}
+			Channel& ch = myserv.getChanFromName(chname);
+			
+			if(!ch.isUserIn(myserv.getUsernameFromSock(fd)))
+			{
+				std::string msg;
+				msg += "You are not in the channel, you can´t invite\n";
+				send(fd, msg.c_str(), msg.size(), 0);
+			}
+			if(!myserv.isUserReal(invnick))
+			{
+				std::string msg;
+				msg += "The user you are inviting doesn´t exists\n";
+				send(fd, msg.c_str(), msg.size(), 0);
+			}
+			std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(invnick));
+			ch.setInvited(finder->second);
+			std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
+			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
+		}
 
-}
+		}
+
+

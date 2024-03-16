@@ -29,3 +29,18 @@ void Channel::setEmpty(int empty)
 {
     _empty = empty;
 }
+int	Channel::isUserIn(std::string user)
+{
+	std::list<User>::iterator it = _clients.begin();
+	for (; it != _clients.end(); it++)
+	{
+		if ((*it).getNickname() == user)
+			return (1);
+	}
+	return (0);
+}
+
+void Channel::setInvited(User &invited)
+{
+	_invited.push_back(invited);
+}

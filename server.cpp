@@ -91,6 +91,16 @@ void Server::sendData(int sockfd, const std::string& data)
     send(sockfd, data.c_str(), data.length(), 0);
     //std::cout << "Sent: " << data << std::endl;
 }
+
+std::string Server::getUsernameFromSock(int fd)
+{
+    for (std::map<int, User>::iterator it = _clientSock.begin(); it != _clientSock.end(); it++)
+    {
+        if (it->first == fd)
+            return (it->second.getNickname());
+    }
+    return (0);
+}
 void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
 {
     std::list<User>::iterator it = ch.getListUsers().begin();
@@ -100,3 +110,35 @@ void	Server::ft_send_all_chan(Server myserv, Channel ch, std::string msg)
         myserv.sendData(it->getSocket(), msg);
     }
 }
+int	Server::isChanReal(std::string channel)
+{
+    std::list<Channel>::iterator it = _channels.begin();
+    for(; it != _channels.end(); it++)
+    {
+        if((*it).getName() == channel)
+            return(1);
+    }
+    return (0);
+}
+
+int Server::isUserReal(std::string user)
+{
+    std::map<int, User>::iterator it = _clientSock.begin();
+    for(; it != _clientSock.end(); it++)
+    {
+        if(it->second.getNickname() == user)
+            return(1);
+    }
+    return (0);
+}
+int Server::getUserSockFromNick(std::string name)
+{
+    for (std::map<int, User>::iterator it = _clientSock.begin(); it != _clientSock.end(); it++)
+    {
+        if (it->second.getNickname() == name)
+            return (it->first);
+    }
+    return (0);
+}
+
+

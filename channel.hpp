@@ -31,6 +31,8 @@ class Channel
 		std::string getPassword();
 		std::list<User> &getListUsers();
 		void setEmpty(int empty);
+		int	isUserIn(std::string user);
+		void setInvited(User &invited);
 
 
 };

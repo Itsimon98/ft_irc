@@ -40,11 +40,16 @@ class Server
         std::string getServerName();
 		std::map<int, User>& getList();
 		int getSocketUser(std::string username);
+		std::string getUsernameFromSock(int fd);
 		std::list<Channel>& getChannel();
 		void ft_send_all_chan(Server myserv, Channel ch, std::string msg);
 		void sendData(int sockfd, const std::string& data);
 		Channel& getChanFromName(std::string name);
         int join(std::string command, int fd);
+		int	isChanReal(std::string channel);
+		int	isUserReal(std::string user);
+		int getUserSockFromNick(std::string nick);
+
 
 
 };
