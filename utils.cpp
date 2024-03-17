@@ -167,6 +167,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 	std::vector<std::string> args;
 	std::stringstream ss(buffer);
 	std::getline(ss, tmp, ' ');
+	int cmdflag = 0;
 	// while(myserv.getBuildcmd().back()!= '\n') 
 	// 	{
 	// 		std::cout<<"ciao"<<std::endl;
@@ -200,7 +201,8 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			myserv.getList()[fd].setStatus("NICKNAME");
 
 			std::cout<< " size users :" << myserv.getList().size()<<std::endl;
-			myserv.remBuildcmd();
+			cmdflag = 1;
+			//myserv.remBuildcmd();
 	}
 	else if(tmp == "PASSWORD" || "PASSWORD" == myserv.getBuildcmd())
 	{
@@ -214,7 +216,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		{
 			myserv.getList()[fd].setStatus("LOGGED");
 			myserv.sendData(fd, "Succesfully logged\n");
-			myserv.remBuildcmd();
+			//myserv.remBuildcmd();
 		}
 		else
 		{
@@ -223,7 +225,8 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			myserv.getList().erase(fd);
 			myserv.remBuildcmd();
 		}
-		myserv.remBuildcmd();
+		//myserv.remBuildcmd();
+		cmdflag = 1;
 	}
 	else if (tmp == "PRVMSG" || "PRVMSG" == myserv.getBuildcmd())
 		{
@@ -231,7 +234,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
-				myserv.remBuildcmd();
+				//myserv.remBuildcmd();
 				return;
 			}
 			std::string command;
@@ -271,14 +274,16 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			fmessage += '\n';
 			strsize = fmessage.size();
 			send(tsock, fmessage.c_str() , strsize, 0);
-			myserv.remBuildcmd();
+			//myserv.remBuildcmd();
+			cmdflag = 1;
 		}
 		else if (tmp == "JOIN"|| "JOIN" == myserv.getBuildcmd())
 		{
+			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
-				myserv.remBuildcmd();
+				//myserv.remBuildcmd();
 				return;
 			}
 			std::string chname;
@@ -349,7 +354,8 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				std::string chmessage;
 
 			}
-			myserv.remBuildcmd();
+			//myserv.remBuildcmd();
+			cmdflag = 1;
 		}
 		else if(tmp == "INVITE"|| "INVITE" == myserv.getBuildcmd())
 		{
@@ -384,6 +390,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
 			myserv.remBuildcmd();
 			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
+			cmdflag = 1;
 		}
 		else if(tmp == "KICK" ||"KICK" == myserv.getBuildcmd())
 		{
@@ -437,22 +444,22 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		}
 		else if(tmp == "MODE" || "MODE" == myserv.getBuildcmd())
 		{
-		myserv.remBuildcmd();
-		std::string channel;
-		ss >> channel;
-		std::string mode;
-		ss >> mode;
-		std::string nick;
-		ss >> nick;
-		std::cout<< channel << mode << nick;
+			myserv.remBuildcmd();
+			std::string channel;
+			ss >> channel;
+			std::string mode;
+			ss >> mode;
+			std::string nick;
+			ss >> nick;
+			std::cout<< channel << mode << nick;
 			if(!myserv.isChanReal(channel))
 			{
 				std::cout << "CCHannel not found!" << std::endl;
 				myserv.sendData(fd, "MyIRC CHannel not found!\n");
 				return ;
 			}
-		Channel& ch = myserv.getChanFromName(channel);
-		std::list<User>::iterator it = ch.getListUsers().begin();
+			Channel& ch = myserv.getChanFromName(channel);
+			std::list<User>::iterator it = ch.getListUsers().begin();
 			if (mode == "+o" || mode == "-o")
 			{
 				if(!ch.isUserIn(myserv.getUsernameFromSock(fd)) || !ch.isUserOper(myserv.getUsernameFromSock(fd)))
@@ -460,41 +467,41 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 					myserv.sendData(fd, "You are not operator\n");
 					return;
 				}
-			else if (!ch.isUserIn(nick))
-			{
-				myserv.sendData(fd, "THe user  is not in this Channel, can't make him operator.\n");
-				return;
+				else if (!ch.isUserIn(nick))
+				{
+					myserv.sendData(fd, "THe user  is not in this Channel, can't make him operator.\n");
+					return;
+				}
+				else if (mode == "+o")
+				{
+					if(ch.isUserOper(nick))
+					{
+						myserv.sendData(fd, "MyIRC the user is not an operator!\n");
+						return;
+					}
+				else
+				{
+					std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(nick));
+					ch.setOper(finder->second);
+					std::string msg = ":"+myserv.getList()[fd].getNickname() + " MODE "  + channel + " +o " + nick + "\n";
+					myserv.ft_send_all_chan(myserv, ch, msg);
+					std::cout << "the user " << nick << " is now an operator!" << std::endl;
+				}
 			}
-			else if (mode == "+o")
+			else
 			{
 				if(ch.isUserOper(nick))
 				{
-					myserv.sendData(fd, "MyIRC the user is not an operator!\n");
-					return;
-				}
-			else
-			{
-				std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(nick));
-				ch.setOper(finder->second);
-				std::string msg = ":"+myserv.getList()[fd].getNickname() + " MODE "  + channel + " +o " + nick + "\n";
-				myserv.ft_send_all_chan(myserv, ch, msg);
-				std::cout << "the user " << nick << " is now an operator!" << std::endl;
-			}
-		}
-		else
-		{
-			if(ch.isUserOper(nick))
-			{
-				std::list<User>::iterator finder = ch.getOper().begin();
-				for (; finder != ch.getOper().end(); finder++)
-				{
-					if (finder->getNickname() == nick)
+					std::list<User>::iterator finder = ch.getOper().begin();
+					for (; finder != ch.getOper().end(); finder++)
 					{
-						ch.removeOper(nick);
-						std::cout << "The user " << nick << "  remove from operators!" << std::endl;
-						std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " -o " + nick + "\n";
-						myserv.ft_send_all_chan(myserv, ch, msg);
-						break ;
+						if (finder->getNickname() == nick)
+						{
+							ch.removeOper(nick);
+							std::cout << "The user " << nick << "  remove from operators!" << std::endl;
+							std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " -o " + nick + "\n";
+							myserv.ft_send_all_chan(myserv, ch, msg);
+							break ;
 					}
 				}
 			}
@@ -583,8 +590,9 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		myserv.sendData(fd, "You are not an operator, you can't use MODE command!\n");
 		myserv.remBuildcmd();
 	}
+	cmdflag = 1;
 	}
-	if(myserv.getBuildcmd().back()!= '\n')
+	if(myserv.getBuildcmd().back()!= '\n' && cmdflag == 0)
 	 	myserv.setBuildcmd(tmp);
 	else
 		myserv.remBuildcmd();

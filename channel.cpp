@@ -170,7 +170,7 @@ int Channel::getLimit()
 
 int	Channel::isUserInvited(std::string user)
 {
-    for (std::list<User>::iterator it = _invited.begin(); it != _invited.end(); it++)
+    for (std::list<User>::iterator it = this->_invited.begin(); it != this->_invited.end(); it++)
     {
                 if (it->getNickname() == user)
                     return (1);
