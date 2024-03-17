@@ -148,7 +148,7 @@ void Channel::setLimitOn(Server &myserv, int limit)
 
 int Channel::isInvOn()
 {
-	return(this->_invOn = 0);
+	return(this->_invOn);
 }
 
 int Channel::isPwOn()

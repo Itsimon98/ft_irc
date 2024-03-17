@@ -372,18 +372,20 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 
 			if(!myserv.isChanReal(chname))
 			{
-
 				myserv.sendData(fd, "Channel not found!\n");
+				return ;
 			}
 			Channel& ch = myserv.getChanFromName(chname);
 
 			if(!ch.isUserIn(myserv.getUsernameFromSock(fd)))
 			{
 				myserv.sendData(fd, "You are not in the channel, you can't invite\n");
+				return;
 			}
 			if(!myserv.isUserReal(invnick))
 			{
 				myserv.sendData(fd, "The user you are inviting doesn't exists\n");
+				return;
 			}
 			std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(invnick));
 			ch.setInvited(finder->second);
