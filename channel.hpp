@@ -4,6 +4,7 @@
 #include <list>
 
 class User;
+class Server;
 
 class Channel
 {
@@ -34,8 +35,25 @@ class Channel
 		int	isUserIn(std::string user);
 		void setInvited(User &invited);
 		int isUserOper(std::string user);
-		void removeOper(std::string user);
 		void setOper(User &suser);
+		std::list<User> &getOper();
+		void	removeOper(std::string operatorn);
+		void	setPw(std::string &pw);
+		void	removePw();
+		void	setInvOn();
+		void	remInvOn();
+		void	setTopicOn();
+		void	removeTopicOn();
+		void	setLimitOn(Server & myserv, int limit);
+		void	removeLimitOn();
+		int	isInvOn();
+		int	isPwOn();
+		int	isUserInvited(std::string user);
+		std::string getPw();
+		int isLimitOn();
+		int getLimit();
+
+
 
 
 };

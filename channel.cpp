@@ -56,22 +56,124 @@ int	Channel::isUserOper(std::string user)
     return (0);
 }
 
-void Channel::removeOper(std::string sbirro)
+void Channel::setOper(User &user)
+{
+	_operator.push_back(user);
+}
+std::list<User> &Channel::getOper()
+{
+	return(this->_operator);
+}
+
+void Channel::removeOper(std::string operatorn)
 {
 	std::list<User>::iterator finder = _operator.begin();
 	for(; finder != _operator.end(); finder++)
 	{
-		if (finder->getNickname() == sbirro)
+		if (finder->getNickname() == operatorn)
 		{
 			_operator.erase(finder);
-			std::cout << "User removed from operators" << std::endl;
+			std::cout << "Operator removed!\n" << std::endl;
 			break ;
 		}
 	}
 	if (finder == _operator.end())
-	 	std::cout << "The user in not an operator" << std::endl;
+	 	std::cout << "User is not an operator!\n" << std::endl;
 }
-void Channel::setOper(User &user)
+void Channel::setPw(std::string &password)
 {
-	_operator.push_back(user);
+	this->_pwOn = 1;
+	this->_password = password;
+}
+void Channel::removePw()
+{
+	this->_password = "";
+	this->_pwOn = 0;
+}
+void Channel::setInvOn()
+{
+	this->_invOn = 1;
+}
+
+void Channel::remInvOn()
+{
+	this->_invOn = 0;
+}
+
+void Channel::setTopicOn()
+{
+	this->_topicOn = 1;
+}
+void Channel::removeTopicOn()
+{
+	this->_topicOn = 0;
+}
+void Channel::removeLimitOn()
+{
+	this->_limitOn = 0;
+}
+void Channel::setLimitOn(Server &myserv, int limit)
+{
+	this->_limitOn = 1;
+	_limit = limit;
+
+	if (_limit > this->_clients.size())
+	{
+		_stop = 0;
+		return ;
+	}
+	else if (_limit == this->_clients.size())
+	{
+		_stop = 1;
+		return ;
+	}
+	int i = 0;
+	for (std::list<User>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		if (i >= _limit)
+		{
+			std::string server = "IrcServer";
+			std::string reason = "Channel is full";
+			std::string msg = ":" + server + " KICK " + getName() + " " + (*it).getNickname() + " " + reason + "\r\n";
+			std::string msg1 = ":" + server +  "!" + " KICK " + getName() + " " + (*it).getNickname() + " " + reason + "\n";
+			myserv.ft_send_all_chan(myserv, (*this), msg1);
+			myserv.sendData((*it).getSocket(), msg);
+			this->_clients.erase(it);
+			it--;
+		}
+		i++;
+	}
+	_stop = 1;
+}
+
+int Channel::isInvOn()
+{
+	return(this->_invOn = 0);
+}
+
+int Channel::isPwOn()
+{
+	return(this->_pwOn);
+}
+int Channel::isLimitOn()
+{
+	return(this->_limit);
+}
+std::string Channel::getPw()
+{
+	return(this->_password);
+}
+int Channel::getLimit()
+{
+	return(this->_limit);
+}
+
+int	Channel::isUserInvited(std::string user)
+{
+    for (std::list<User>::iterator it = _invited.begin(); it != _invited.end(); it++)
+    {
+                if (it->getNickname() == user)
+                    return (1);
+    }
+    return (0);
 }
