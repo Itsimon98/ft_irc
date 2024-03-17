@@ -1,6 +1,6 @@
 #include "server.hpp"
 
-Server::Server(int port, std::string password) : _port(port), _password(password) , _nameServer("MyIrc"){}
+Server::Server(int port, std::string password) : _port(port), _password(password) , _nameServer("MyIrc"), buildcmd(""){}
 Server::~Server(){}
 
 void Server::setPort(int port)
@@ -152,10 +152,24 @@ void Server::sendChanMsg(std::string channelname, std::string message, Server my
 		if (ch.isUserIn(user.getNickname()) == 1)
 			myserv.ft_send_all_chan(myserv, ch, message);
 		else
-			myserv.sendData(user.getSocket(), "You never joined this channel\n");
+			myserv.sendData(user.getSocket(), "You are not part of this channel\n");
 	}
 	else
 	{
 		myserv.sendData(user.getSocket(), "Channel does not exists\n");
 	}
+}
+
+void Server::setBuildcmd(std::string _buildcmd)
+{
+	this->buildcmd += _buildcmd;
+}
+
+std::string Server::getBuildcmd()
+{
+	return(this->buildcmd);
+}
+void Server::remBuildcmd()
+{
+	this->buildcmd = "";
 }

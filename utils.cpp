@@ -167,8 +167,15 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 	std::vector<std::string> args;
 	std::stringstream ss(buffer);
 	std::getline(ss, tmp, ' ');
-	if(tmp == "NICKNAME")
+	// while(myserv.getBuildcmd().back()!= '\n') 
+	// 	{
+	// 		std::cout<<"ciao"<<std::endl;
+	// 		ss>>tmp;
+	// 		myserv.setBuildcmd(tmp);
+	// 	}
+	if(tmp == "NICKNAME"|| "NICKNAME" == myserv.getBuildcmd())
 	{
+			myserv.remBuildcmd();
 			if(user.getStatus() == "UNLOGGED")
 			{
 				myserv.sendData(fd, "Use the command PASSWORD before setting your nickname\n");
@@ -193,30 +200,38 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			myserv.getList()[fd].setStatus("NICKNAME");
 
 			std::cout<< " size users :" << myserv.getList().size()<<std::endl;
+			myserv.remBuildcmd();
 	}
-	else if(tmp == "PASSWORD")
+	else if(tmp == "PASSWORD" || "PASSWORD" == myserv.getBuildcmd())
 	{
+		myserv.remBuildcmd();
 		std::string password;
 		ss >>  password;
+		std::cout<< password<< std::endl;
 		myserv.getList()[fd].setPassword(password);
 		// user.setPassword(password);
 		if(password == myserv.getPassword())
 		{
 			myserv.getList()[fd].setStatus("LOGGED");
 			myserv.sendData(fd, "Succesfully logged\n");
+			myserv.remBuildcmd();
 		}
 		else
 		{
 			myserv.sendData(fd, "WRONG PASSWORD\n");
 			close(fd);
 			myserv.getList().erase(fd);
+			myserv.remBuildcmd();
 		}
+		myserv.remBuildcmd();
 	}
-	else if (tmp == "PRVMSG")
+	else if (tmp == "PRVMSG" || "PRVMSG" == myserv.getBuildcmd())
 		{
+			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
+				myserv.remBuildcmd();
 				return;
 			}
 			std::string command;
@@ -236,12 +251,14 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				}
 				fmessage += '\n';
 				myserv.sendChanMsg(username, fmessage, myserv, user);
+				myserv.remBuildcmd();
 				return;
 
 			}
 			if(tsock == 0)
 			{
 				myserv.sendData(fd, "No such user found\n");
+				myserv.remBuildcmd();
 				return;
 			}
 			std::string message;
@@ -254,12 +271,14 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			fmessage += '\n';
 			strsize = fmessage.size();
 			send(tsock, fmessage.c_str() , strsize, 0);
+			myserv.remBuildcmd();
 		}
-		else if (tmp == "JOIN")
+		else if (tmp == "JOIN"|| "JOIN" == myserv.getBuildcmd())
 		{
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
+				myserv.remBuildcmd();
 				return;
 			}
 			std::string chname;
@@ -293,12 +312,12 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				myserv.sendData(fd, "You need to be invited to join this channel!\r\n");
 				return;
 			}
-		else if(ch.isPwOn() != 0 && !ch.isUserInvited(myserv.getUsernameFromSock(fd)))
-		{
-			if(ss)
+			else if(ch.isPwOn() != 0 && !ch.isUserInvited(myserv.getUsernameFromSock(fd)))
 			{
-				std::string pw_ins;
-				ss >> pw_ins;
+				if(ss)
+				{
+					std::string pw_ins;
+					ss >> pw_ins;
 				if (pw_ins != ch.getPw())
 				{
 					myserv.sendData(fd, "You need to join with the correct channel password!\n");
@@ -310,7 +329,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 					myserv.sendData(fd, "IRCserv You need to join with the channel password!\n");
 					return ;
 				}
-		}
+			}
 				if (ch.isLimitOn() && ch.getLimit() == ch.getListUsers().size())
 				{
 					myserv.sendData(fd, "Channel User limit reached!\n");
@@ -330,9 +349,11 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				std::string chmessage;
 
 			}
+			myserv.remBuildcmd();
 		}
-		else if(tmp == "INVITE")
+		else if(tmp == "INVITE"|| "INVITE" == myserv.getBuildcmd())
 		{
+			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
@@ -361,10 +382,12 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(invnick));
 			ch.setInvited(finder->second);
 			std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
+			myserv.remBuildcmd();
 			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
 		}
-		else if(tmp == "KICK")
+		else if(tmp == "KICK" ||"KICK" == myserv.getBuildcmd())
 		{
+			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
@@ -410,10 +433,11 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		myserv.sendData(myserv.getUserSockFromNick(nick), "You have been kicked\n");
 		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
 		}
+		myserv.remBuildcmd();
 		}
-		else if(tmp == "MODE")
+		else if(tmp == "MODE" || "MODE" == myserv.getBuildcmd())
 		{
-		//std::stringstream ss(command);
+		myserv.remBuildcmd();
 		std::string channel;
 		ss >> channel;
 		std::string mode;
@@ -555,8 +579,16 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		}
 	}
 	else
+	{
 		myserv.sendData(fd, "You are not an operator, you can't use MODE command!\n");
+		myserv.remBuildcmd();
 	}
+	}
+	if(myserv.getBuildcmd().back()!= '\n')
+	 	myserv.setBuildcmd(tmp);
+	else
+		myserv.remBuildcmd();
+	std::cout<< "build commadn : "<<myserv.getBuildcmd()<<std::endl;
 
 }
 

@@ -28,6 +28,7 @@ class Server
         std::string  _nameServer;
         std::map<int, User>	_clientSock;
 		std::list<Channel> _channels;
+		std::string buildcmd;
     public:
         Server(int port, std::string password);
         ~Server();
@@ -50,6 +51,9 @@ class Server
 		int	isUserReal(std::string user);
 		int getUserSockFromNick(std::string nick);
 		void sendChanMsg(std::string username, std::string message, Server myserv, User user);
+		void setBuildcmd(std::string cmd);
+		std::string getBuildcmd();
+		void remBuildcmd();
 
 
 
