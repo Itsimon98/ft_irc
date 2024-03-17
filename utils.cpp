@@ -91,6 +91,7 @@ int cycle(Server &myserv)
 			myserv.getList()[clientsockfd].setPassword("");
 			//myserv.getList()[clientsockfd].setHostname("");
 			myserv.getList()[clientsockfd].setStatus("UNLOGGED");
+
 			std::cout << "Accept creato!" << std::endl;
 			send(fds[n].fd,  "Type the server password : \n",  29, 0);
 		}
@@ -127,14 +128,16 @@ int cycle(Server &myserv)
 					continue;
 				}
 			//std::cout<<GREEN<< buffer<<a<<std::endl;
-			parser(buffer, myserv.getList()[fds[a].fd], myserv, fds[a].fd);
+
+			User user = myserv.getList()[fds[a].fd];
+			parser(buffer, user, myserv, fds[a].fd);
 
 			}
 		}
-
 	}
 	return(0);
 }
+
 void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist)
 {
 	std::cout << "Channel found	!" << std::endl;
@@ -156,31 +159,49 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 		ite++;
 	}
 }
-void parser(std::string buffer, User user, Server &myserv, int fd)
+
+void parser(std::string buffer, User &user, Server &myserv, int fd)
 {
 	std::string tmp;
 	std::string tmp1;
 	std::vector<std::string> args;
 	std::stringstream ss(buffer);
 	std::getline(ss, tmp, ' ');
-	
+
+	std::cout << "nickane: " << user.getNickname() << " status " << user.getStatus() << std::endl;
 	if(tmp == "NICKNAME")
 	{
-			if(myserv.getList()[fd].getStatus() != "LOGGED")
+			if(user.getStatus() == "UNLOGGED")
 			{
 				send(fd, "Use the command PASSWORD before setting your nickname\n",  56, 0);
 				return;
 			}
 			std::string nickname;
 			ss>>nickname;
-			myserv.getList()[fd].setNickname(nickname);
-			std::cout<< " size users :" <<myserv.getList().size()<<std::endl;
+			std::cout<<"entering NICKNAME: "<< nickname << std::endl;
+			std::map<int, User>::iterator it = myserv.getList().begin();
+			for (; it != myserv.getList().end(); it++)
+			{
+				User u = it->second;
+				if (u.getNickname() == nickname)
+				{
+					myserv.sendData(fd, "Nickname is not available\n");
+					return ;
+				}
+			}
+			user.setNickname(nickname);
+			user.setStatus("NICKNAME");
+			// myserv.getList()[fd].setNickname(nickname);
+			// myserv.getList()[fd].setStatus("NICKNAME");
+
+			std::cout<< " size users :" << myserv.getList().size()<<std::endl;
 	}
 	else if(tmp == "PASSWORD")
 	{
 		std::string password;
 		ss >>  password;
 		myserv.getList()[fd].setPassword(password);
+		// user.setPassword(password);
 		if(password == myserv.getPassword())
 		{
 			myserv.getList()[fd].setStatus("LOGGED");
@@ -188,13 +209,18 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 		}
 		else
 		{
-			send(fd, "WRONG PASSWORD\n", 15 ,  0 );
+			myserv.sendData(fd, "WRONG PASSWORD\n");
 			close(fd);
 			myserv.getList().erase(fd);
 		}
 	}
 	else if (tmp == "PRVMSG")
 		{
+			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			{
+				myserv.sendData(fd, "Use the command NICKNAME\n");
+				return;
+			}
 			std::string command;
 			std::string username;
 			std::string sendernick = myserv.getList()[fd].getNickname();
@@ -211,7 +237,7 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 					fmessage += message + " ";
 				}
 				fmessage += '\n';
-				myserv.sendChanMsg(username, fmessage, myserv, fd);
+				myserv.sendChanMsg(username, fmessage, myserv, user);
 				return;
 
 			}
@@ -233,6 +259,11 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 		}
 		else if (tmp == "JOIN")
 		{
+			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			{
+				myserv.sendData(fd, "Use the command NICKNAME\n");
+				return;
+			}
 			std::string chname;
 			ss>>chname;
 			std::list<Channel>::iterator it = myserv.getChannel().begin();
@@ -256,17 +287,33 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 			}
 			else
 			{
+				// 
+				// TODO: qui va controllato se il canale ha bisogno di password, oppure solo invito, oppure etc.etc...
+				// 
+
 				Channel &ch = myserv.getChanFromName(chname);
-				(*it).setClient(myserv.getList()[fd]);
-				ft_update_list(myserv, chname, fd, (*it).getListUsers());
+				
+				if (ch.isUserIn(user.getNickname()))
+				{
+					myserv.sendData(fd, "You already joined this channel\n");
+					return;
+				}
+	
+				it->setClient(myserv.getList()[fd]);
+				ft_update_list(myserv, chname, fd, it->getListUsers());
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
 				myserv.ft_send_all_chan(myserv, ch, msg);
 				std::string chmessage;
-				
+
 			}
 		}
 		else if(tmp == "INVITE")
 		{
+			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			{
+				myserv.sendData(fd, "Use the command NICKNAME\n");
+				return;
+			}
 			std::string chname;
 			std::string invnick;
 			ss>>chname;
@@ -299,6 +346,11 @@ void parser(std::string buffer, User user, Server &myserv, int fd)
 		}
 		else if(tmp == "KICK")
 		{
+			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			{
+				myserv.sendData(fd, "Use the command NICKNAME\n");
+				return;
+			}
 		std::string channel;
 		ss >> channel;		
 		User sender_user = myserv.getList().find(fd)->second; 

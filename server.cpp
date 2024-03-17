@@ -141,19 +141,21 @@ int Server::getUserSockFromNick(std::string name)
     return (0);
 }
 
-void Server::sendChanMsg(std::string username, std::string message, Server myserv, int fd)
+void Server::sendChanMsg(std::string channelname, std::string message, Server myserv, User user)
 {
+	channelname.erase(0, 1);
 
-	username.erase(0,1);
-	if(myserv.isChanReal(username))
+	if(myserv.isChanReal(channelname))
 	{
-		Channel &ch = myserv.getChanFromName(username);
-		myserv.ft_send_all_chan(myserv, ch, message);
+		Channel &ch = myserv.getChanFromName(channelname);
+
+		if (ch.isUserIn(user.getNickname()) == 1)
+			myserv.ft_send_all_chan(myserv, ch, message);
+		else
+			myserv.sendData(user.getSocket(), "You never joined this channel\n");
 	}
 	else
 	{
-		myserv.sendData(fd, "Channel does not exists\n");
+		myserv.sendData(user.getSocket(), "Channel does not exists\n");
 	}
-
 }
-

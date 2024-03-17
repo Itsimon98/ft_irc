@@ -29,12 +29,13 @@ void Channel::setEmpty(int empty)
 {
     _empty = empty;
 }
-int	Channel::isUserIn(std::string user)
+int	Channel::isUserIn(std::string nickname)
 {
 	std::list<User>::iterator it = _clients.begin();
+
 	for (; it != _clients.end(); it++)
 	{
-		if ((*it).getNickname() == user)
+		if (it->getNickname() == nickname)
 			return (1);
 	}
 	return (0);

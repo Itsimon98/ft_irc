@@ -11,7 +11,6 @@ class User
 	std::string _status;
 	std::string _nickname;
 	int clientsock;
-	std::string status;
 
 	public:
 	User();

@@ -49,13 +49,13 @@ class Server
 		int	isChanReal(std::string channel);
 		int	isUserReal(std::string user);
 		int getUserSockFromNick(std::string nick);
-		void sendChanMsg(std::string username, std::string message, Server myserv, int fd);
+		void sendChanMsg(std::string username, std::string message, Server myserv, User user);
 
 
 
 };
 int	init(int argc, char **argv, Server &myserv);
 int cycle(Server &myserv);
-void parser(std::string, User user, Server &myserv, int fd);
+void parser(std::string, User &user, Server &myserv, int fd);
 void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist);
 #endif
