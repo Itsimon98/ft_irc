@@ -11,6 +11,7 @@ class Channel
 	private :
 		std::string _name;
 		std::string _password;
+		std::string _topic;
 		std::list<User> _clients;
 		std::list<User> _operator;
 		std::list<User> _invited;
@@ -51,8 +52,10 @@ class Channel
 		int	isTopicOn();
 		int	isUserInvited(std::string user);
 		std::string getPw();
+		std::string getTopic();
 		int isLimitOn();
 		size_t getLimit();
+		void setTopic(std::string topic);
 
 
 

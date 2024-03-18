@@ -10,6 +10,7 @@ Channel::Channel(std::string name)
 	_limitOn = 0;
 	_limit = 50;
 	_stop = 0;
+	_topic = "";
 }
 Channel::~Channel(){}
 
@@ -104,6 +105,10 @@ void Channel::setTopicOn()
 {
 	this->_topicOn = 1;
 }
+void Channel::setTopic(std::string topic)
+{
+	this->_topic = topic;
+}
 void Channel::removeTopicOn()
 {
 	this->_topicOn = 0;
@@ -157,6 +162,10 @@ int Channel::isTopicOn()
 std::string Channel::getPw()
 {
 	return(this->_password);
+}
+std::string Channel::getTopic()
+{
+	return(this->_topic);
 }
 size_t Channel::getLimit()
 {

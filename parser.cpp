@@ -296,6 +296,23 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			ss>>channel;
 			std::string topic;
 			ss>> topic;
+			if(channel.size() == 0)
+				return;
+			if(channel[0] == '#')
+			{
+				
+				channel.erase(0, 1);
+				if(myserv.isChanReal(channel))
+				{	
+					
+					Channel &ch = myserv.getChanFromName(channel);
+					std::string msg = "Channel topic is : " + ch.getTopic() + "\n";
+					myserv.sendData(fd, msg);
+				}
+				else
+					myserv.sendData(fd, "Channel not found!");
+				return;
+			}
 			if(!myserv.isChanReal(channel))
 			{
 				myserv.sendData(fd, "Channel not found!");
@@ -308,6 +325,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				return;
 			}
 			std::string msg = channel + ": topic has beeen changed to : " + topic + '\n';
+			ch.setTopic(topic);
 			myserv.ft_send_all_chan(myserv, ch, msg);
 			
 
