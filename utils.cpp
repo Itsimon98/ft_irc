@@ -168,13 +168,8 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 	std::stringstream ss(buffer);
 	std::getline(ss, tmp, ' ');
 	int cmdflag = 0;
-	// while(myserv.getBuildcmd().back()!= '\n') 
-	// 	{
-	// 		std::cout<<"ciao"<<std::endl;
-	// 		ss>>tmp;
-	// 		myserv.setBuildcmd(tmp);
-	// 	}
-	if(tmp == "NICKNAME"|| "NICKNAME" == myserv.getBuildcmd())
+	
+	if(tmp == "NICKNAME"|| "NICKNAME" == myserv.getBuildcmd()) //NICKNAME command
 	{
 			myserv.remBuildcmd();
 			if(user.getStatus() == "UNLOGGED")
@@ -195,28 +190,23 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 					return ;
 				}
 			}
-			// user.setNickname(nickname);
-			// user.setStatus("NICKNAME");
 			myserv.getList()[fd].setNickname(nickname);
 			myserv.getList()[fd].setStatus("NICKNAME");
 
 			std::cout<< " size users :" << myserv.getList().size()<<std::endl;
 			cmdflag = 1;
-			//myserv.remBuildcmd();
 	}
-	else if(tmp == "PASSWORD" || "PASSWORD" == myserv.getBuildcmd())
+	else if(tmp == "PASSWORD" || "PASSWORD" == myserv.getBuildcmd())  //PASSWORD command
 	{
 		myserv.remBuildcmd();
 		std::string password;
 		ss >>  password;
 		std::cout<< password<< std::endl;
 		myserv.getList()[fd].setPassword(password);
-		// user.setPassword(password);
 		if(password == myserv.getPassword())
 		{
 			myserv.getList()[fd].setStatus("LOGGED");
 			myserv.sendData(fd, "Succesfully logged\n");
-			//myserv.remBuildcmd();
 		}
 		else
 		{
@@ -225,16 +215,14 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			myserv.getList().erase(fd);
 			myserv.remBuildcmd();
 		}
-		//myserv.remBuildcmd();
 		cmdflag = 1;
 	}
-	else if (tmp == "PRVMSG" || "PRVMSG" == myserv.getBuildcmd())
+	else if (tmp == "PRVMSG" || "PRVMSG" == myserv.getBuildcmd())  //PRVMSG command
 		{
 			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
-				//myserv.remBuildcmd();
 				return;
 			}
 			std::string command;
@@ -274,16 +262,14 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			fmessage += '\n';
 			strsize = fmessage.size();
 			send(tsock, fmessage.c_str() , strsize, 0);
-			//myserv.remBuildcmd();
 			cmdflag = 1;
 		}
-		else if (tmp == "JOIN"|| "JOIN" == myserv.getBuildcmd())
+		else if (tmp == "JOIN"|| "JOIN" == myserv.getBuildcmd())  //JOIN command
 		{
 			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
 			{
 				myserv.sendData(fd, "Use the command NICKNAME\n");
-				//myserv.remBuildcmd();
 				return;
 			}
 			std::string chname;
@@ -310,8 +296,6 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			else
 			{
 				Channel &ch = myserv.getChanFromName(chname);
-				// TODO: qui va controllato se il canale ha bisogno di password, oppure solo invito, oppure etc.etc...
-				//
 			if (ch.isInvOn() && !ch.isUserInvited(myserv.getUsernameFromSock(fd)))
 			{
 				myserv.sendData(fd, "You need to be invited to join this channel!\r\n");
@@ -354,10 +338,9 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				std::string chmessage;
 
 			}
-			//myserv.remBuildcmd();
 			cmdflag = 1;
 		}
-		else if(tmp == "INVITE"|| "INVITE" == myserv.getBuildcmd())
+		else if(tmp == "INVITE"|| "INVITE" == myserv.getBuildcmd()) //INVITE commmand
 		{
 			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
@@ -394,7 +377,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
 			cmdflag = 1;
 		}
-		else if(tmp == "KICK" ||"KICK" == myserv.getBuildcmd())
+		else if(tmp == "KICK" ||"KICK" == myserv.getBuildcmd())  //KICK command command
 		{
 			myserv.remBuildcmd();
 			if(myserv.getList()[fd].getStatus() != "NICKNAME")
@@ -444,7 +427,29 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		}
 		myserv.remBuildcmd();
 		}
-		else if(tmp == "MODE" || "MODE" == myserv.getBuildcmd())
+		else if(tmp == "USERNAME")
+		{
+			myserv.remBuildcmd();	
+			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			{
+				myserv.sendData(fd, "Use the command NICKNAME\n");
+				return;
+			}
+
+		std::string username;
+		ss>>username;
+	
+		std::cout << "User arrivato: " << username << std::endl;
+		myserv.getList()[fd].setUsername(username);
+		myserv.getList()[fd].setRealname(username);
+		//std::cout << "User salvato: " << myserv.getList()[fd].getUsername() << std::endl;
+		std::string welcome = "001 "+ myserv.getList()[fd].getNickname() + " :Welcome to the server MYIrc, " + myserv.getList()[fd].getNickname() + "\r\n";
+		myserv.sendData(fd, welcome);
+		welcome = "MYIrc This is NOT the global chat, to join a channel type /join <channel_name>!\n";
+		myserv.sendData(fd, welcome);
+			return ;
+		}
+		else if(tmp == "MODE" || "MODE" == myserv.getBuildcmd()) //MODE command
 		{
 			myserv.remBuildcmd();
 			std::string channel;
