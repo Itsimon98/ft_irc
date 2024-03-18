@@ -19,7 +19,7 @@ class Channel
 		int _invOn;
 		int _topicOn;
 		int _limitOn;
-		int _limit;
+		size_t _limit;
 		int _stop;
 	public:
 		Channel();
@@ -52,7 +52,7 @@ class Channel
 		int	isUserInvited(std::string user);
 		std::string getPw();
 		int isLimitOn();
-		int getLimit();
+		size_t getLimit();
 
 
 

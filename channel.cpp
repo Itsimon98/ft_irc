@@ -127,7 +127,7 @@ void Channel::setLimitOn(Server &myserv, int limit)
 		_stop = 1;
 		return ;
 	}
-	int i = 0;
+	size_t i = 0;
 	for (std::list<User>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		if (i >= _limit)
@@ -168,7 +168,7 @@ std::string Channel::getPw()
 {
 	return(this->_password);
 }
-int Channel::getLimit()
+size_t Channel::getLimit()
 {
 	return(this->_limit);
 }

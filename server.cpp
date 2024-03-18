@@ -1,6 +1,6 @@
 #include "server.hpp"
 
-Server::Server(int port, std::string password) : _port(port), _password(password) , _nameServer("MyIrc"), buildcmd(""){}
+Server::Server(int port, std::string password) : _password(password) , _port(port), _nameServer("MyIrc"), buildcmd(""){}
 Server::~Server(){}
 
 void Server::setPort(int port)
@@ -76,7 +76,7 @@ std::list<Channel>& Server::getChannel()
 
 Channel& Server::getChanFromName(std::string channel)
 {
-    static Channel empty(empty);
+ static Channel empty(channel);
     for (std::list<Channel>::iterator it = _channels.begin(); it != _channels.end(); it++)
     {
         if (it->getName() == channel)
@@ -144,7 +144,6 @@ int Server::getUserSockFromNick(std::string name)
 void Server::sendChanMsg(std::string channelname, std::string message, Server myserv, User user)
 {
 	channelname.erase(0, 1);
-
 	if(myserv.isChanReal(channelname))
 	{
 		Channel &ch = myserv.getChanFromName(channelname);

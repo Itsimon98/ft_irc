@@ -264,6 +264,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		std::string msg = "You have been kicked from #" + channel + '\n';
 		myserv.sendData(myserv.getUserSockFromNick(nick), msg);
 		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
+		myserv.getList()[fd].remBuildcmd();
 		}
 		}
 																//---------------USERNAME--------------//
@@ -308,7 +309,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				myserv.sendData(fd, "You are not an operator, you can´t change the topic");
 				return;
 			}
-			std::string msg = channel + ": topic has beeen changed to : " + topic;
+			std::string msg = channel + ": topic has beeen changed to : " + topic + '\n';
 			myserv.ft_send_all_chan(myserv, ch, msg);
 			
 
@@ -331,7 +332,6 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				return ;
 			}
 			Channel& ch = myserv.getChanFromName(channel);
-			std::list<User>::iterator it = ch.getListUsers().begin();
 			if (mode == "+o" || mode == "-o")
 			{
 				if(!ch.isUserIn(myserv.getUsernameFromSock(fd)) || !ch.isUserOper(myserv.getUsernameFromSock(fd)))
@@ -433,18 +433,15 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			int limit = 500;
 			if (nick != " ")
 			{
-				try
-				{
-					std::stoi(nick);
-				}
-				catch(const std::exception& e)
+				int a = std::atoi(nick.c_str());
+				if(isdigit(a))
 				{
 					std::string msg = "MYIRC not a number\n";
 					myserv.sendData(fd, msg);
 					return;
 				}
 			}
-			limit = std::stoi(nick);
+			limit = std::atoi(nick.c_str());
 			if (limit < 1)
 			{
 				std::string msg = "MYIRC not a valid parameter!\n";
@@ -453,7 +450,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			}
 			std::cout << "limit: " << limit << std::endl;
 			ch.setLimitOn(myserv, limit);
-			std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " +l " + std::to_string(limit) + " " + "\n";
+			std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " +l "+ "\n";
 			myserv.ft_send_all_chan(myserv, ch, msg);
 		}
 	}
@@ -464,7 +461,9 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 	}
 	cmdflag = 1;
 	}
-	if(myserv.getList()[fd].getBuildcmd().back()!= '\n' && cmdflag == 0)
+	int _size;
+	_size = myserv.getList()[fd].getBuildcmd().size();
+	if(myserv.getList()[fd].getBuildcmd()[_size] != '\n' && cmdflag == 0)
 	 	myserv.getList()[fd].setBuildcmd(tmp);
 	else
 		myserv.getList()[fd].remBuildcmd();

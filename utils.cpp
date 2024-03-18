@@ -11,8 +11,8 @@ int	init(int argc, char **argv, Server &myserv)
     }
 	try
 	{
-		std::stoi (argv[1]);
-		if(std::stoi (argv[1]) < 1024 || std::stoi (argv[1]) > 65535)
+		//std::atoi (argv[1]);
+		if(std::atoi (argv[1]) < 1024 || std::atoi (argv[1]) > 65535)
 		{
 			std::cerr<<RED<<"Insert a numeric value between 1024 and 65535"<<std::endl;
 			return (1);
@@ -23,7 +23,7 @@ int	init(int argc, char **argv, Server &myserv)
 		{
 			std::cerr<<RED<< "Insert a numeric value" << std::endl;
 		}
-		myserv.setPort(std::stoi(argv[1]));
+		myserv.setPort(std::atoi(argv[1]));
 		myserv.setPassword(argv[2]);
 		if(myserv.createSocket() == -1)
 		{
@@ -76,7 +76,6 @@ int cycle(Server &myserv)
 					exit(0);
 				}
 			}
-			std::map<int, User>::iterator it = myserv.getList().begin();
 			myserv.getList().insert(std::pair<int, User>(clientsockfd, User()));
 			std::cout<< "Client sock: " << clientsockfd << std::endl;
 
@@ -95,7 +94,7 @@ int cycle(Server &myserv)
 			std::cout << "Accept creato!" << std::endl;
 			send(fds[n].fd,  "Type the server password : \n",  29, 0);
 		}
-		for(int a = 1; a <= myserv.getList().size(); a++)
+		for(size_t a = 1; a <= myserv.getList().size(); a++)
 		{
 
 			if(fds[a].revents && POLLIN)
@@ -152,7 +151,6 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 	}
 	ite = userlist.begin();
 	std::string server = "IRCserv";
-	Channel& ch = myserv.getChanFromName(channel);
 	while (ite != userlist.end())
 	{
 		myserv.sendData((*ite).getSocket(), msg);

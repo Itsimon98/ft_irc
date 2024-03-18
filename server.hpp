@@ -17,6 +17,8 @@
 #include "channel.hpp"
 #include <list>
 #include <signal.h>
+#include <stdlib.h>
+#include <errno.h>
 class User;
 class Channel;
 class Server
