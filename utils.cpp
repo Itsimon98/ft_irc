@@ -448,6 +448,29 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			return ;
 		}
 		
+		else if (tmp == "TOPIC" || "TOPIC" == myserv.getList()[fd].getBuildcmd())
+		{	
+			myserv.getList()[fd].remBuildcmd();
+			std::string channel;
+			ss>>channel;
+			std::string topic;
+			ss>> topic;
+			if(!myserv.isChanReal(channel))
+			{
+				myserv.sendData(fd, "Channel not found!");
+				return;
+			}
+			Channel &ch = myserv.getChanFromName(channel);
+			if(!ch.isUserOper(myserv.getUsernameFromSock(fd)) && ch.isTopicOn())
+			{
+				myserv.sendData(fd, "You are not an operator, you can´t change the topic");
+				return;
+			}
+			std::string msg = channel + ": topic has beeen changed to : " + topic;
+			myserv.ft_send_all_chan(myserv, ch, msg);
+			
+
+		}
 		else if(tmp == "MODE" || "MODE" == myserv.getList()[fd].getBuildcmd()) //MODE command
 		{
 			myserv.getList()[fd].remBuildcmd();

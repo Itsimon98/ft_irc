@@ -159,6 +159,11 @@ int Channel::isLimitOn()
 {
 	return(this->_limit);
 }
+int Channel::isTopicOn()
+{
+	return(this->_topicOn);
+}
+
 std::string Channel::getPw()
 {
 	return(this->_password);

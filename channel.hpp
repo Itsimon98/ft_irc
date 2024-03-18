@@ -48,6 +48,7 @@ class Channel
 		void	removeLimitOn();
 		int	isInvOn();
 		int	isPwOn();
+		int	isTopicOn();
 		int	isUserInvited(std::string user);
 		std::string getPw();
 		int isLimitOn();
