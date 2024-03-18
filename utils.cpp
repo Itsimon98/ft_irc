@@ -160,42 +160,27 @@ void parser(std::string buffer, Server &myserv, int fd)
 	std::string tmp;
 	std::getline(ss, tmp, ' ');
 
-	bool is_partial_command = false;
-
 	tmp = myserv.getList()[fd].getBuildcmd() + tmp;
 
+	bool is_partial_command = false;
+
 	if(tmp == "NICKNAME")
-	{
 		eval_nickname(ss, myserv, fd);
-	}
 	else if(tmp == "PASSWORD")
-	{
 		eval_password(ss, myserv, fd);
-	}
 	else if (tmp == "PRVMSG")
-	{
 		eval_message(ss, myserv, fd);
-	}
 	else if (tmp == "JOIN")
-	{
 		eval_join(ss, myserv, fd);
-	}
 	else if(tmp == "INVITE")
-	{
 		eval_invite(ss, myserv, fd);
-	}
 	else if(tmp == "KICK")
-	{
 		eval_kick(ss, myserv, fd);
-	}
 	else if(tmp == "MODE")
-	{
 		eval_mode(ss, myserv, fd);
-	}
 	else
-	{
 		is_partial_command = true;
-	}
+
 
 	if (is_partial_command && myserv.getList()[fd].getBuildcmd().back() != '\n')
 	{

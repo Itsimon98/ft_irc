@@ -63,5 +63,5 @@ std::string User::getBuildcmd()
 
 void User::setBuildcmd(std::string s)
 {
-	this->_buildcmd = "";
+	this->_buildcmd = s;
 }
