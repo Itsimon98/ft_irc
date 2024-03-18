@@ -51,8 +51,6 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		else
 		{
 			myserv.sendData(fd, "WRONG PASSWORD\n");
-			close(fd);
-			myserv.getList().erase(fd);
 			myserv.getList()[fd].remBuildcmd();
 		}
 		cmdflag = 1;
