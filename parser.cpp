@@ -75,7 +75,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			if(username[0] == '#')
 			{
 				std::string message;
-				std::string fmessage = "!CHANNMSG " + username + " ";
+				std::string fmessage = "PRIVMSG " + username + ": ";
 				while(ss >>  message)
 				{
 					fmessage += message + " ";
@@ -91,7 +91,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				return;
 			}
 			std::string message;
-			std::string fmessage = "!PRVMSG by :" + sendernick + " ";
+			std::string fmessage = "PRVIMSG " + sendernick + ": ";
 			while(ss >> message)
 			{
 				fmessage += message + " ";
