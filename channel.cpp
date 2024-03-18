@@ -127,22 +127,12 @@ void Channel::setLimitOn(Server &myserv, int limit)
 		_stop = 1;
 		return ;
 	}
-	size_t i = 0;
-	for (std::list<User>::iterator it = _clients.begin(); it != _clients.end(); it++)
-	{
-		if (i >= _limit)
+
+		if (this->_clients.size() > _limit)
 		{
-			std::string server = "IrcServer";
-			std::string reason = "Channel is full";
-			std::string msg = ":" + server + " KICK " + getName() + " " + (*it).getNickname() + " " + reason + "\r\n";
-			std::string msg1 = ":" + server +  "!" + " KICK " + getName() + " " + (*it).getNickname() + " " + reason + "\n";
-			myserv.ft_send_all_chan(myserv, (*this), msg1);
-			myserv.sendData((*it).getSocket(), msg);
-			this->_clients.erase(it);
-			it--;
+			std::string msg = "Cant't set this limit\n";
+			myserv.ft_send_all_chan(myserv, (*this), msg);
 		}
-		i++;
-	}
 	_stop = 1;
 }
 
