@@ -16,7 +16,7 @@ void sig_handler(int signo)
 			close((*it).first);
 		}
 		close(myserv.getServSock());
-		void exit();
+		 exit(1);
 	}
 }
 
