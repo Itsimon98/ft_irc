@@ -157,7 +157,7 @@ int Channel::isPwOn()
 }
 int Channel::isLimitOn()
 {
-	return(this->_limit);
+	return(this->_limitOn);
 }
 int Channel::isTopicOn()
 {

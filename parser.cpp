@@ -128,7 +128,6 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 
 				myserv.getChannel().push_back(newchannel);
 				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
-
 				myserv.ft_send_all_chan(myserv, newchannel, msg);
 			}
 			else
@@ -261,11 +260,11 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 		{
 		if(ch.isUserOper(nick))
 			ch.removeOper(nick);
-		ch.getListUsers().erase(it);
-		myserv.sendData(myserv.getUserSockFromNick(nick), "You have been kicked\n");
+		 ch.getListUsers().erase(it);
+		std::string msg = "You have been kicked from #" + channel + '\n';
+		myserv.sendData(myserv.getUserSockFromNick(nick), msg);
 		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
 		}
-		myserv.getList()[fd].remBuildcmd();
 		}
 																//---------------USERNAME--------------//
 		else if(tmp == "USERNAME"  || "USERNAME" == myserv.getList()[fd].getBuildcmd())
