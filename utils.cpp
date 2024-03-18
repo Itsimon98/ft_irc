@@ -1,7 +1,6 @@
 #include "server.hpp"
 
 
-
 int	init(int argc, char **argv, Server &myserv)
 {
 	 if(argc != 3)
@@ -44,21 +43,22 @@ int cycle(Server &myserv)
 {
 	//int flags = fcntl(myserv.getServSock(), F_GETFL, 0);
 	fcntl(myserv.getServSock(), F_SETFL, O_NONBLOCK);
-	struct pollfd fds[500];
-	fds[0].fd = myserv.getServSock();
-	fds[0].events = POLLIN;
-	fds[0].revents = 0;
-	int ret =0;
+	// struct pollfd fds[500];
+	myserv.fds[0].fd = myserv.getServSock();
+	myserv.fds[0].events = POLLIN;
+	myserv.fds[0].revents = 0;
+	int ret = 0;
+
 	while(1)
 	{
-		ret = poll(fds, myserv.getList().size() + 1, -1);
+		ret = poll(myserv.fds, myserv.getList().size() + 1, -1);
 		if(ret < 0)
 		{
 			std::cerr<<RED<<"Poll Error"<<std::endl;
 			break;
 		}
 
-		if(fds[0].revents && POLLIN)
+		if(myserv.fds[0].revents && POLLIN)
 		{
 			int clientsockfd = accept(myserv.getServSock(), NULL, NULL);
 			if (clientsockfd < 0)
@@ -81,72 +81,245 @@ int cycle(Server &myserv)
 			std::cout<< "Client sock: " << clientsockfd << std::endl;
 
 			int n = myserv.getList().size();
-			fds[n].fd = clientsockfd;
-			fds[n].events = POLLIN;
-			fds[n].revents = 0;
+			myserv.fds[n].fd = clientsockfd;
+			myserv.fds[n].events = POLLIN;
+			myserv.fds[n].revents = 0;
 			myserv.getList()[clientsockfd].setSocket(clientsockfd);
 			myserv.getList()[clientsockfd].setStatus("");
 			myserv.getList()[clientsockfd].setRealname("");
 			myserv.getList()[clientsockfd].setUsername("");
 			myserv.getList()[clientsockfd].setPassword("");
+			myserv.getList()[clientsockfd].setNickname("");
 			//myserv.getList()[clientsockfd].setHostname("");
 			myserv.getList()[clientsockfd].setStatus("UNLOGGED");
 
 			std::cout << "Accept creato!" << std::endl;
-			send(fds[n].fd,  "Type the server password : \n",  29, 0);
+			myserv.sendData(myserv.fds[n].fd, "Type the server password : \n");
 		}
 		for(int a = 1; a <= myserv.getList().size(); a++)
 		{
-
-			if(fds[a].revents && POLLIN)
+			if(myserv.fds[a].revents && POLLIN)
 			{
-
 				char buffer[1024];
 				memset(buffer, 0, sizeof(buffer));
-				ret = recv(fds[a].fd, buffer, sizeof(buffer), 0);
+				ret = recv(myserv.fds[a].fd, buffer, sizeof(buffer), 0);
 				if(ret == -1)
 				{
-				std::cerr<<RED<<" error :"<<errno<<std::endl;
+					std::cerr<<RED<<" error :"<<errno<<std::endl;
 					if(errno == EAGAIN || errno == EWOULDBLOCK)
 					{
 						std::cerr<<RED<<"Would block , continue"<<errno<<std::endl;
 						continue;
 					}
-
 			 		else
 					{
-						close(fds[a].fd);
-						myserv.getList().erase(fds[a].fd);
+						close(myserv.fds[a].fd);
+						myserv.getList().erase(myserv.fds[a].fd);
 						std::cout << errno << std::endl;
 						return (0);
 					}
 				}
 				else if(ret == 0)
 				{
-					close(fds[a].fd);
-					myserv.getList().erase(fds[a].fd);
+					std::cout << "buffer at rec == 0: " << buffer << std::endl;
+					close(myserv.fds[a].fd);
+					myserv.getList().erase(myserv.fds[a].fd);
 					continue;
 				}
-			//std::cout<<GREEN<< buffer<<a<<std::endl;
 
-			User user = myserv.getList()[fds[a].fd];
-			parser(buffer, user, myserv, fds[a].fd);
+				int fd = myserv.fds[a].fd;
 
+				std::map<int, User>::iterator user_iterator = myserv.getList().find(fd);
+
+				if (user_iterator == myserv.getList().end())
+				{
+					std::cout << "strange, no user found for fd: " << fd << std::endl;
+					continue;
+				}
+
+				std::cout<<GREEN<< \
+				"Tot users: '" << myserv.getList().size() << \
+				"' - user: '" << myserv.getList()[fd].getNickname() << \
+				"' - status: '"<< myserv.getList()[fd].getStatus() << \
+				"' - socket: '" << myserv.getList()[fd].getSocket() << \
+				"' - previous_message: '" << myserv.getList()[fd].getBuildcmd() << \
+				"' - position: '" << a << "'\n" << \
+				"------Buffer: '" << RED << buffer << GREEN << "'" << std::endl;
+
+				parser(buffer, myserv, fd);
 			}
 		}
 	}
 	return(0);
 }
 
-void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist)
+
+void parser(std::string buffer, Server &myserv, int fd)
+{
+	std::stringstream ss(buffer);
+	std::string tmp;
+	std::getline(ss, tmp, ' ');
+
+	bool is_partial_command = false;
+
+	tmp = myserv.getList()[fd].getBuildcmd() + tmp;
+
+	if(tmp == "NICKNAME")
+	{
+		eval_nickname(ss, myserv, fd);
+	}
+	else if(tmp == "PASSWORD")
+	{
+		eval_password(ss, myserv, fd);
+	}
+	else if (tmp == "PRVMSG")
+	{
+		eval_message(ss, myserv, fd);
+	}
+	else if (tmp == "JOIN")
+	{
+		eval_join(ss, myserv, fd);
+	}
+	else if(tmp == "INVITE")
+	{
+		eval_invite(ss, myserv, fd);
+	}
+	else if(tmp == "KICK")
+	{
+		eval_kick(ss, myserv, fd);
+	}
+	else if(tmp == "MODE")
+	{
+		eval_mode(ss, myserv, fd);
+	}
+	else
+	{
+		is_partial_command = true;
+	}
+
+	if (is_partial_command && myserv.getList()[fd].getBuildcmd().back() != '\n')
+	{
+		std::cout << "Setting build-cmd to : '" << tmp << "'" << std::endl;
+		myserv.getList()[fd].setBuildcmd(tmp);
+	}
+	else if (is_partial_command && myserv.getList()[fd].getBuildcmd().back() == '\n')
+	{
+		myserv.sendData(fd, "You sent and invalid command!\n");
+	}
+	else
+	{
+		std::cout << "Erasing build-cmd" << std::endl;
+		myserv.getList()[fd].setBuildcmd("");
+	}
+}
+
+
+void eval_password(std::stringstream &ss, Server &myserv, int fd)
+{
+	std::string password;
+	ss >> password;
+
+	std::cout<< "typed password" << password << std::endl;
+	myserv.getList()[fd].setPassword(password);
+
+	if(password == myserv.getPassword())
+	{
+		myserv.getList()[fd].setStatus("LOGGED");
+		myserv.sendData(fd, "Succesfully logged\n");
+	}
+	else
+	{
+		myserv.sendData(fd, "WRONG PASSWORD\n");
+		close(fd);
+		myserv.getList().erase(fd);
+	}
+}
+
+
+void eval_nickname(std::stringstream &ss, Server &myserv, int fd)
+{
+	std::string nickname;
+	ss >> nickname;
+	std::cout<<"entering NICKNAME: "<< nickname << std::endl;
+
+	if(myserv.getList()[fd].getStatus() == "UNLOGGED")
+	{
+		myserv.sendData(fd, "Use the command PASSWORD before setting your nickname\n");
+		return;
+	}
+
+	for (std::map<int, User>::iterator it = myserv.getList().begin(); it != myserv.getList().end(); it++)
+	{
+		User u = it->second;
+		if (u.getNickname() == nickname)
+		{
+			myserv.sendData(fd, "Nickname is not available\n");
+			return ;
+		}
+	}
+	myserv.getList()[fd].setNickname(nickname);
+	myserv.getList()[fd].setStatus("NICKNAME");
+}
+
+void eval_message(std::stringstream &ss, Server &myserv, int fd)
+{
+	if(myserv.getList()[fd].getStatus() != "NICKNAME")
+	{
+		myserv.sendData(fd, "Use the command NICKNAME\n");
+		return;
+	}
+
+	std::string command;
+	std::string destinatary;
+	std::string sendernick = myserv.getList()[fd].getNickname();
+	int strsize;
+
+	ss>>destinatary;
+
+	if(destinatary[0] == '#')
+	{
+		std::string message;
+		std::string fmessage = "!CHANNMSG " + destinatary + " ";
+		while(ss)
+		{
+			ss >>  message;
+			fmessage += message + " ";
+		}
+		fmessage += '\n';
+		myserv.sendChanMsg(destinatary, fmessage, myserv, myserv.getList()[fd]);
+		return;
+	}
+
+	int tsock = myserv.getSocketUser(destinatary);
+
+	if(tsock == 0)
+	{
+		myserv.sendData(fd, "No such user found\n");
+		return;
+	}
+	std::string message;
+	std::string fmessage = "!PRVMSG by " + sendernick + " ";
+	while(ss)
+	{
+		ss >> message;
+		fmessage += message + " ";
+	}
+	fmessage += '\n';
+	strsize = fmessage.size();
+	myserv.sendData(tsock, fmessage);
+}
+
+
+
+void	ft_update_list(Server myserv, std::string channel, int fd, std::list<User> userlist)
 {
 	std::cout << "Channel found	!" << std::endl;
-	std::string msg = ":" + myserv.getList()[j].getNickname() + "! JOIN " + channel + "\r\n";
+	std::string msg = ":" + myserv.getList()[fd].getNickname() + "! JOIN " + channel + "\r\n";
 	std::string users;
 	std::list<User>::iterator ite = userlist.begin();
 	while (ite != userlist.end())
 	{
-		users += (*ite).getNickname();
+		users += ite->getNickname();
 		users += " ";
 		ite++;
 	}
@@ -155,366 +328,266 @@ void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> u
 	Channel& ch = myserv.getChanFromName(channel);
 	while (ite != userlist.end())
 	{
-		myserv.sendData((*ite).getSocket(), msg);
+		myserv.sendData(ite->getSocket(), msg);
 		ite++;
 	}
 }
 
-void parser(std::string buffer, User &user, Server &myserv, int fd)
+
+void eval_join(std::stringstream &ss, Server &myserv, int fd)
 {
-	std::string tmp;
-	std::string tmp1;
-	std::vector<std::string> args;
-	std::stringstream ss(buffer);
-	std::getline(ss, tmp, ' ');
-	int cmdflag = 0;
-	// while(myserv.getBuildcmd().back()!= '\n') 
-	// 	{
-	// 		std::cout<<"ciao"<<std::endl;
-	// 		ss>>tmp;
-	// 		myserv.setBuildcmd(tmp);
-	// 	}
-	if(tmp == "NICKNAME"|| "NICKNAME" == myserv.getBuildcmd())
+	if(myserv.getList()[fd].getStatus() != "NICKNAME")
 	{
-			myserv.remBuildcmd();
-			if(user.getStatus() == "UNLOGGED")
-			{
-				myserv.sendData(fd, "Use the command PASSWORD before setting your nickname\n");
-				return;
-			}
-			std::string nickname;
-			ss>>nickname;
-			std::cout<<"entering NICKNAME: "<< nickname << std::endl;
-			std::map<int, User>::iterator it = myserv.getList().begin();
-			for (; it != myserv.getList().end(); it++)
-			{
-				User u = it->second;
-				if (u.getNickname() == nickname)
-				{
-					myserv.sendData(fd, "Nickname is not available\n");
-					return ;
-				}
-			}
-			// user.setNickname(nickname);
-			// user.setStatus("NICKNAME");
-			myserv.getList()[fd].setNickname(nickname);
-			myserv.getList()[fd].setStatus("NICKNAME");
-
-			std::cout<< " size users :" << myserv.getList().size()<<std::endl;
-			cmdflag = 1;
-			//myserv.remBuildcmd();
+		myserv.sendData(fd, "Use the command NICKNAME\n");
+		return;
 	}
-	else if(tmp == "PASSWORD" || "PASSWORD" == myserv.getBuildcmd())
+
+	std::string chname;
+	ss>>chname;
+
+	std::list<Channel>::iterator it = myserv.getChannel().begin();
+
+	for(; it != myserv.getChannel().end(); it++)
 	{
-		myserv.remBuildcmd();
-		std::string password;
-		ss >>  password;
-		std::cout<< password<< std::endl;
-		myserv.getList()[fd].setPassword(password);
-		// user.setPassword(password);
-		if(password == myserv.getPassword())
-		{
-			myserv.getList()[fd].setStatus("LOGGED");
-			myserv.sendData(fd, "Succesfully logged\n");
-			//myserv.remBuildcmd();
-		}
-		else
-		{
-			myserv.sendData(fd, "WRONG PASSWORD\n");
-			close(fd);
-			myserv.getList().erase(fd);
-			myserv.remBuildcmd();
-		}
-		//myserv.remBuildcmd();
-		cmdflag = 1;
+			if(chname == it->getName())
+			break;
+		std::cout<< it->getName()<< std::endl;
 	}
-	else if (tmp == "PRVMSG" || "PRVMSG" == myserv.getBuildcmd())
-		{
-			myserv.remBuildcmd();
-			if(myserv.getList()[fd].getStatus() != "NICKNAME")
-			{
-				myserv.sendData(fd, "Use the command NICKNAME\n");
-				//myserv.remBuildcmd();
-				return;
-			}
-			std::string command;
-			std::string username;
-			std::string sendernick = myserv.getList()[fd].getNickname();
-			int strsize;
-			ss>>username;
-			int tsock = myserv.getSocketUser(username);
-			if(username[0] == '#')
-			{
-				std::string message;
-				std::string fmessage = "!CHANNMSG " + username + " ";
-				while(ss)
-				{
-					ss >>  message;
-					fmessage += message + " ";
-				}
-				fmessage += '\n';
-				myserv.sendChanMsg(username, fmessage, myserv, user);
-				myserv.remBuildcmd();
-				return;
+	if(it == myserv.getChannel().end())
+	{
+		Channel newchannel(chname);
+		newchannel.setClient(myserv.getList()[fd]);
+		newchannel.setOper(myserv.getList()[fd]);
 
-			}
-			if(tsock == 0)
-			{
-				myserv.sendData(fd, "No such user found\n");
-				myserv.remBuildcmd();
-				return;
-			}
-			std::string message;
-			std::string fmessage = "!PRVMSG by " + sendernick + " ";
-			while(ss)
-			{
-				ss >>  message;
-				fmessage += message + " ";
-			}
-			fmessage += '\n';
-			strsize = fmessage.size();
-			send(tsock, fmessage.c_str() , strsize, 0);
-			//myserv.remBuildcmd();
-			cmdflag = 1;
+		myserv.getChannel().push_back(newchannel);
+		std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
+
+		myserv.ft_send_all_chan(myserv, newchannel, msg);
+	}
+	else
+	{
+		Channel &ch = myserv.getChanFromName(chname);
+		// TODO: qui va controllato se il canale ha bisogno di password, oppure solo invito, oppure etc.etc...
+		//
+		if (ch.isInvOn() && !ch.isUserInvited(myserv.getList()[fd].getNickname()))
+		{
+			myserv.sendData(fd, "You need to be invited to join this channel!\r\n");
+			return;
 		}
-		else if (tmp == "JOIN"|| "JOIN" == myserv.getBuildcmd())
+		else if(ch.isPwOn() != 0 && !ch.isUserInvited(myserv.getList()[fd].getNickname()))
 		{
-			myserv.remBuildcmd();
-			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			if(ss)
 			{
-				myserv.sendData(fd, "Use the command NICKNAME\n");
-				//myserv.remBuildcmd();
-				return;
-			}
-			std::string chname;
-			ss>>chname;
-			std::list<Channel>::iterator it = myserv.getChannel().begin();
-
-			for(; it != myserv.getChannel().end(); it++)
-			{
-				 if(chname == (*it).getName())
-					 break;
-					std::cout<< (*it).getName()<< std::endl;
-			}
-			if(it == myserv.getChannel().end())
-			{
-				Channel newchannel(chname);
-				newchannel.setClient(myserv.getList()[fd]);
-				newchannel.setOper(myserv.getList()[fd]);
-
-				myserv.getChannel().push_back(newchannel);
-				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ newchannel.getName() + " channel\n";
-
-				myserv.ft_send_all_chan(myserv, newchannel, msg);
-			}
-			else
-			{
-				Channel &ch = myserv.getChanFromName(chname);
-				// TODO: qui va controllato se il canale ha bisogno di password, oppure solo invito, oppure etc.etc...
-				//
-			if (ch.isInvOn() && !ch.isUserInvited(myserv.getUsernameFromSock(fd)))
-			{
-				myserv.sendData(fd, "You need to be invited to join this channel!\r\n");
-				return;
-			}
-			else if(ch.isPwOn() != 0 && !ch.isUserInvited(myserv.getUsernameFromSock(fd)))
-			{
-				if(ss)
-				{
-					std::string pw_ins;
-					ss >> pw_ins;
+				std::string pw_ins;
+				ss >> pw_ins;
 				if (pw_ins != ch.getPw())
 				{
 					myserv.sendData(fd, "You need to join with the correct channel password!\n");
 					return;
 				}
-				}
-				else
-				{
-					myserv.sendData(fd, "IRCserv You need to join with the channel password!\n");
-					return ;
-				}
 			}
-				if (ch.isLimitOn() && ch.getLimit() == ch.getListUsers().size())
-				{
-					myserv.sendData(fd, "Channel User limit reached!\n");
-					return;
-				}
-
-				if (ch.isUserIn(user.getNickname()))
-				{
-					myserv.sendData(fd, "You already joined this channel\n");
-					return;
-				}
-
-				it->setClient(myserv.getList()[fd]);
-				ft_update_list(myserv, chname, fd, it->getListUsers());
-				std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
-				myserv.ft_send_all_chan(myserv, ch, msg);
-				std::string chmessage;
-
-			}
-			//myserv.remBuildcmd();
-			cmdflag = 1;
-		}
-		else if(tmp == "INVITE"|| "INVITE" == myserv.getBuildcmd())
-		{
-			myserv.remBuildcmd();
-			if(myserv.getList()[fd].getStatus() != "NICKNAME")
+			else
 			{
-				myserv.sendData(fd, "Use the command NICKNAME\n");
-				return;
-			}
-			std::string chname;
-			std::string invnick;
-			ss>>chname;
-			ss>>invnick;
-
-			if(!myserv.isChanReal(chname))
-			{
-				myserv.sendData(fd, "Channel not found!\n");
+				myserv.sendData(fd, "IRCserv You need to join with the channel password!\n");
 				return ;
 			}
-			Channel& ch = myserv.getChanFromName(chname);
-
-			if(!ch.isUserIn(myserv.getUsernameFromSock(fd)))
-			{
-				myserv.sendData(fd, "You are not in the channel, you can't invite\n");
-				return;
-			}
-			if(!myserv.isUserReal(invnick))
-			{
-				myserv.sendData(fd, "The user you are inviting doesn't exists\n");
-				return;
-			}
-			std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(invnick));
-			ch.setInvited(finder->second);
-			std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
-			myserv.remBuildcmd();
-			myserv.sendData(myserv.getUserSockFromNick(invnick), msg);
-			cmdflag = 1;
 		}
-		else if(tmp == "KICK" ||"KICK" == myserv.getBuildcmd())
+
+		if (ch.isLimitOn() && ch.getLimit() == ch.getListUsers().size())
 		{
-			myserv.remBuildcmd();
-			if(myserv.getList()[fd].getStatus() != "NICKNAME")
-			{
-				myserv.sendData(fd, "Use the command NICKNAME\n");
-				return;
-			}
-		std::string channel;
-		ss >> channel;
-		User sender_user = myserv.getList().find(fd)->second;
-			if(!myserv.isChanReal(channel))
-			{
-				std::cout << "Channel not found" << std::endl;
-				myserv.sendData(fd, "MyIRC Channel not found!\r\n");
-				return ;
-			}
-		Channel& ch = myserv.getChanFromName(channel);
-		std::list<User>::iterator it = ch.getListUsers().begin();
-		std::string nick;
-		ss >> nick;
-		if(!ch.isUserOper(myserv.getUsernameFromSock(fd)))
+			myserv.sendData(fd, "Channel User limit reached!\n");
+			return;
+		}
+
+		if (ch.isUserIn(myserv.getList()[fd].getNickname()))
 		{
-			myserv.sendData(fd, "You are not an operator\r\n");
+			myserv.sendData(fd, "You already joined this channel\n");
+			return;
+		}
+
+		it->setClient(myserv.getList()[fd]);
+		ft_update_list(myserv, chname, fd, it->getListUsers());
+
+		std::string msg = "Welcome " + myserv.getList()[fd].getNickname() + " to "+ ch.getName() + " channel\n";
+		myserv.ft_send_all_chan(myserv, ch, msg);
+		std::string chmessage;
+
+	}
+}
+
+
+void eval_invite(std::stringstream &ss, Server &myserv, int fd)
+{
+	if(myserv.getList()[fd].getStatus() != "NICKNAME")
+	{
+		myserv.sendData(fd, "Use the command NICKNAME\n");
+		return;
+	}
+
+	std::string chname;
+	std::string invnick;
+	ss>>chname;
+	ss>>invnick;
+
+	if(!myserv.isChanReal(chname))
+	{
+		myserv.sendData(fd, "Channel not found!\n");
+		return ;
+	}
+
+	Channel& ch = myserv.getChanFromName(chname);
+
+	if(!ch.isUserIn(myserv.getList()[fd].getNickname()))
+	{
+		myserv.sendData(fd, "You are not in the channel, you can't invite\n");
+		return;
+	}
+
+	User *invited = myserv.isUserReal(invnick);
+	if(invited == NULL)
+	{
+		myserv.sendData(fd, "The user you are inviting doesn't exists\n");
+		return;
+	}
+	std::map<int, User>::iterator finder = myserv.getList().find(invited->getSocket());
+	ch.setInvited(finder->second);
+
+	std::string msg = ":" + invnick + " INVITE " + myserv.getList()[fd].getNickname() + " " + chname + "\r\n";
+	myserv.sendData(invited->getSocket(), msg);
+}
+
+
+void eval_kick(std::stringstream &ss, Server &myserv, int fd)
+{
+	if(myserv.getList()[fd].getStatus() != "NICKNAME")
+	{
+		myserv.sendData(fd, "Use the command NICKNAME\n");
+		return;
+	}
+
+	std::string channel;
+	ss >> channel;
+
+	// User sender_user = myserv.getList().find(fd)->second;
+	if(!myserv.isChanReal(channel))
+	{
+		std::cout << "Channel not found" << std::endl;
+		myserv.sendData(fd, "MyIRC Channel not found!\r\n");
+		return ;
+	}
+
+	Channel& ch = myserv.getChanFromName(channel);
+	std::list<User>::iterator it = ch.getListUsers().begin();
+	std::string nick;
+	ss >> nick;
+
+	if(!ch.isUserOper(myserv.getList()[fd].getNickname()))
+	{
+		myserv.sendData(fd, "You are not an operator\r\n");
+		return;
+	}
+	else if (!ch.isUserIn(nick))
+	{
+		myserv.sendData(fd, "The user you want to kick is not in the channel\r\n");
+		return;
+	}
+	else
+	{
+		for(; it != ch.getListUsers().end(); it++)
+		{
+			if (it->getNickname() == nick)
+				break ;
+		}
+	}
+
+	if (it != ch.getListUsers().end())
+	{
+		if(ch.isUserOper(nick))
+			ch.removeOper(nick);
+			
+		ch.getListUsers().erase(it);
+		myserv.sendData(myserv.getList()[fd].getSocket(), "You have been kicked\n");
+		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
+	}
+}
+
+
+void eval_mode(std::stringstream &ss, Server &myserv, int fd)
+{
+	std::string channel;
+	std::string mode;
+	std::string nick;
+
+	ss >> channel;
+	ss >> mode;
+	ss >> nick;
+
+	std::cout<< channel << mode << nick;
+
+	if(!myserv.isChanReal(channel))
+	{
+		std::cout << "CCHannel not found!" << std::endl;
+		myserv.sendData(fd, "MyIRC CHannel not found!\n");
+		return;
+	}
+	
+	Channel& ch = myserv.getChanFromName(channel);
+	std::list<User>::iterator it = ch.getListUsers().begin();
+
+	if (mode == "+o" || mode == "-o")
+	{
+		if(!ch.isUserIn(myserv.getList()[fd].getNickname()) || !ch.isUserOper(myserv.getList()[fd].getNickname()))
+		{
+			myserv.sendData(fd, "You are not operator\n");
 			return;
 		}
 		else if (!ch.isUserIn(nick))
 		{
-			myserv.sendData(fd, "The user you want to kick is not in the channel\r\n");
+			myserv.sendData(fd, "THe user  is not in this Channel, can't make him operator.\n");
 			return;
 		}
-		else
+		else if (mode == "+o")
 		{
-			for(; it != ch.getListUsers().end(); it++)
+			if(ch.isUserOper(nick))
 			{
-				if (it->getNickname() == nick)
-					break ;
-			}
-		}
-
-		if (it != ch.getListUsers().end())
-		{
-		if(ch.isUserOper(nick))
-			ch.removeOper(nick);
-		ch.getListUsers().erase(it);
-		myserv.sendData(myserv.getUserSockFromNick(nick), "You have been kicked\n");
-		std::cout << "User " << it->getNickname() << " removed from the channel" << std::endl;
-		}
-		myserv.remBuildcmd();
-		}
-		else if(tmp == "MODE" || "MODE" == myserv.getBuildcmd())
-		{
-			myserv.remBuildcmd();
-			std::string channel;
-			ss >> channel;
-			std::string mode;
-			ss >> mode;
-			std::string nick;
-			ss >> nick;
-			std::cout<< channel << mode << nick;
-			if(!myserv.isChanReal(channel))
-			{
-				std::cout << "CCHannel not found!" << std::endl;
-				myserv.sendData(fd, "MyIRC CHannel not found!\n");
-				return ;
-			}
-			Channel& ch = myserv.getChanFromName(channel);
-			std::list<User>::iterator it = ch.getListUsers().begin();
-			if (mode == "+o" || mode == "-o")
-			{
-				if(!ch.isUserIn(myserv.getUsernameFromSock(fd)) || !ch.isUserOper(myserv.getUsernameFromSock(fd)))
-				{
-					myserv.sendData(fd, "You are not operator\n");
-					return;
-				}
-				else if (!ch.isUserIn(nick))
-				{
-					myserv.sendData(fd, "THe user  is not in this Channel, can't make him operator.\n");
-					return;
-				}
-				else if (mode == "+o")
-				{
-					if(ch.isUserOper(nick))
-					{
-						myserv.sendData(fd, "MyIRC the user is not an operator!\n");
-						return;
-					}
-				else
-				{
-					std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(nick));
-					ch.setOper(finder->second);
-					std::string msg = ":"+myserv.getList()[fd].getNickname() + " MODE "  + channel + " +o " + nick + "\n";
-					myserv.ft_send_all_chan(myserv, ch, msg);
-					std::cout << "the user " << nick << " is now an operator!" << std::endl;
-				}
+				myserv.sendData(fd, "MyIRC the user is not an operator!\n");
+				return;
 			}
 			else
 			{
-				if(ch.isUserOper(nick))
+				std::map<int, User>::iterator finder = myserv.getList().find(myserv.getUserSockFromNick(nick));
+				ch.setOper(finder->second);
+				std::string msg = ":"+myserv.getList()[fd].getNickname() + " MODE "  + channel + " +o " + nick + "\n";
+				myserv.ft_send_all_chan(myserv, ch, msg);
+				std::cout << "the user " << nick << " is now an operator!" << std::endl;
+			}
+		}
+		else
+		{
+			if(ch.isUserOper(nick))
+			{
+				std::list<User>::iterator finder = ch.getOper().begin();
+				for (; finder != ch.getOper().end(); finder++)
 				{
-					std::list<User>::iterator finder = ch.getOper().begin();
-					for (; finder != ch.getOper().end(); finder++)
+					if (finder->getNickname() == nick)
 					{
-						if (finder->getNickname() == nick)
-						{
-							ch.removeOper(nick);
-							std::cout << "The user " << nick << "  remove from operators!" << std::endl;
-							std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " -o " + nick + "\n";
-							myserv.ft_send_all_chan(myserv, ch, msg);
-							break ;
-					}
+						ch.removeOper(nick);
+						std::cout << "The user " << nick << "  remove from operators!" << std::endl;
+						std::string msg = ":"+ myserv.getList()[fd].getNickname() + " MODE "  + channel + " -o " + nick + "\n";
+						myserv.ft_send_all_chan(myserv, ch, msg);
+						break ;
 				}
+			}
 			}
 			else
 			{
 				myserv.sendData(fd, "IRCserv L'utente è già un comune cittadino del canale!\n");
-				return;
+				return ;
 			}
 		}
 	}
-	if (ch.isUserOper(myserv.getUsernameFromSock(fd)))
+
+	if (ch.isUserOper(myserv.getList()[fd].getNickname()))
 	{
 		if (mode == "+k")
 		{
@@ -571,7 +644,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 				{
 					std::string msg = "MYIRC not a number\n";
 					myserv.sendData(fd, msg);
-					return;
+					return ;
 				}
 			}
 			limit = std::stoi(nick);
@@ -579,7 +652,7 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 			{
 				std::string msg = "MYIRC not a valid parameter!\n";
 				myserv.sendData(fd, msg);
-				return;
+				return ;
 			}
 			std::cout << "limit: " << limit << std::endl;
 			ch.setLimitOn(myserv, limit);
@@ -590,16 +663,6 @@ void parser(std::string buffer, User &user, Server &myserv, int fd)
 	else
 	{
 		myserv.sendData(fd, "You are not an operator, you can't use MODE command!\n");
-		myserv.remBuildcmd();
 	}
-	cmdflag = 1;
-	}
-	if(myserv.getBuildcmd().back()!= '\n' && cmdflag == 0)
-	 	myserv.setBuildcmd(tmp);
-	else
-		myserv.remBuildcmd();
-	std::cout<< "build commadn : "<<myserv.getBuildcmd()<<std::endl;
-
+	return ;
 }
-
-

@@ -30,6 +30,9 @@ class Server
 		std::list<Channel> _channels;
 		std::string buildcmd;
     public:
+
+		struct pollfd fds[500];
+
         Server(int port, std::string password);
         ~Server();
         int createSocket();
@@ -48,18 +51,23 @@ class Server
 		Channel& getChanFromName(std::string name);
         int join(std::string command, int fd);
 		int	isChanReal(std::string channel);
-		int	isUserReal(std::string user);
+		User	*isUserReal(std::string user);
 		int getUserSockFromNick(std::string nick);
 		void sendChanMsg(std::string username, std::string message, Server myserv, User user);
-		void setBuildcmd(std::string cmd);
-		std::string getBuildcmd();
-		void remBuildcmd();
-
-
 
 };
-int	init(int argc, char **argv, Server &myserv);
-int cycle(Server &myserv);
-void parser(std::string, User &user, Server &myserv, int fd);
+int		init(int argc, char **argv, Server &myserv);
+int		cycle(Server &myserv);
+void	parser(std::string buff, Server &myserv, int fd);
+
+
+void	eval_nickname(std::stringstream &ss, Server &myserv, int fd);
+void	eval_password(std::stringstream &ss, Server &myserv, int fd);
+void	eval_message(std::stringstream &ss, Server &myserv, int fd);
+void	eval_join(std::stringstream &ss, Server &myserv, int fd);
+void	eval_invite(std::stringstream &ss, Server &myserv, int fd);
+void	eval_kick(std::stringstream &ss, Server &myserv, int fd);
+void	eval_mode(std::stringstream &ss, Server &myserv, int fd);
+
 void	ft_update_list(Server myserv, std::string channel, int j, std::list<User> userlist);
 #endif

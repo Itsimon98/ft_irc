@@ -10,11 +10,15 @@ class User
 	std::string _password;
 	std::string _status;
 	std::string _nickname;
+	std::string _buildcmd;
 	int clientsock;
 
 	public:
 	User();
 	~User();
+	User(const User &src);
+	User	&operator=(const User &src);
+
 	std::string getUsername();
 	std::string getPassword();
 	std::string getRealname();
@@ -27,6 +31,9 @@ class User
 	void	setStatus(std::string status);
 	void	setRealname(std::string realname);
 	void	setPassword(std::string password);
+
+	void	setBuildcmd(std::string cmd);
+	std::string getBuildcmd();
 };
 
 #endif

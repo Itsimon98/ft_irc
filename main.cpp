@@ -9,7 +9,6 @@ void sig_handler(int signo)
 		std::map<int, User>::iterator ite = myserv.getList().end();
 		std::cout << std::endl;
 		std::cout << "Server chiuso!" << std::endl;
-		myserv.remBuildcmd();
 		for(int i = 0; it != ite, i < myserv.getList().size(); it++, i++)
 		{
 			myserv.sendData((*it).first, "DISCONNECTED\r\n");
@@ -22,12 +21,12 @@ void sig_handler(int signo)
 
 int main(int argc, char **argv)
 {
-	
- 
-	 signal(SIGINT, sig_handler);
     if(init(argc, argv, myserv))
         return(1);
-	if(cycle(myserv))
-		return(1);
 
+	signal(SIGINT, sig_handler);
+
+	cycle(myserv);
+
+	return (1);
 }

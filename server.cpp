@@ -65,7 +65,7 @@ int Server::getSocketUser(std::string username)
 	for (std::map <int, User>::iterator it =_clientSock.begin(); it != _clientSock.end(); it++)
 	{
 		if(it->second.getNickname() == username)
-			 return(it->first);
+			return(it->first);
 	}
 	return(0);
 }
@@ -121,16 +121,17 @@ int	Server::isChanReal(std::string channel)
     return (0);
 }
 
-int Server::isUserReal(std::string user)
+User *Server::isUserReal(std::string user)
 {
     std::map<int, User>::iterator it = _clientSock.begin();
     for(; it != _clientSock.end(); it++)
     {
         if(it->second.getNickname() == user)
-            return(1);
+			return (&(it->second));
     }
-    return (0);
+    return (NULL);
 }
+
 int Server::getUserSockFromNick(std::string name)
 {
     for (std::map<int, User>::iterator it = _clientSock.begin(); it != _clientSock.end(); it++)
@@ -158,18 +159,4 @@ void Server::sendChanMsg(std::string channelname, std::string message, Server my
 	{
 		myserv.sendData(user.getSocket(), "Channel does not exists\n");
 	}
-}
-
-void Server::setBuildcmd(std::string _buildcmd)
-{
-	this->buildcmd += _buildcmd;
-}
-
-std::string Server::getBuildcmd()
-{
-	return(this->buildcmd);
-}
-void Server::remBuildcmd()
-{
-	this->buildcmd = "";
 }

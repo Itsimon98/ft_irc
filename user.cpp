@@ -2,6 +2,18 @@
 User::User(){}
 User::~User(){}
 
+User::User(const User &src) {
+	*this = src;
+	return;
+}
+
+User	&User::operator=(const User &src) {
+	if (this != &src) {
+
+	}
+	return (*this);
+}
+
 void    User::setSocket(int sockfd)
 {
     this->clientsock = sockfd;
@@ -42,4 +54,14 @@ void    User::setPassword(std::string password)
 int User::getSocket()
 {
 	return(this->clientsock);
+}
+
+std::string User::getBuildcmd()
+{
+	return(this->_buildcmd);
+}
+
+void User::setBuildcmd(std::string s)
+{
+	this->_buildcmd = "";
 }
