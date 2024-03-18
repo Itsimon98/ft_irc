@@ -28,6 +28,19 @@ std::string	User::getNickname()
 {
     return (this->_nickname);
 }
+void User::setBuildcmd(std::string buildcmd)
+{
+	this->_buildcmd += buildcmd;
+}
+
+std::string User::getBuildcmd()
+{
+	return(this->_buildcmd);
+}
+void User::remBuildcmd()
+{
+	this->_buildcmd = "";
+}
 
 void    User::setStatus(std::string status)
 {

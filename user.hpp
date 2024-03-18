@@ -11,6 +11,7 @@ class User
 	std::string _status;
 	std::string _nickname;
 	int clientsock;
+	std::string _buildcmd;
 
 	public:
 	User();
@@ -27,6 +28,9 @@ class User
 	void	setStatus(std::string status);
 	void	setRealname(std::string realname);
 	void	setPassword(std::string password);
+	void setBuildcmd(std::string cmd);
+	std::string getBuildcmd();
+	void remBuildcmd();
 };
 
 #endif

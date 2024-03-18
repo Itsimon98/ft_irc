@@ -159,17 +159,3 @@ void Server::sendChanMsg(std::string channelname, std::string message, Server my
 		myserv.sendData(user.getSocket(), "Channel does not exists\n");
 	}
 }
-
-void Server::setBuildcmd(std::string _buildcmd)
-{
-	this->buildcmd += _buildcmd;
-}
-
-std::string Server::getBuildcmd()
-{
-	return(this->buildcmd);
-}
-void Server::remBuildcmd()
-{
-	this->buildcmd = "";
-}

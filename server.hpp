@@ -51,9 +51,6 @@ class Server
 		int	isUserReal(std::string user);
 		int getUserSockFromNick(std::string nick);
 		void sendChanMsg(std::string username, std::string message, Server myserv, User user);
-		void setBuildcmd(std::string cmd);
-		std::string getBuildcmd();
-		void remBuildcmd();
 
 
 
